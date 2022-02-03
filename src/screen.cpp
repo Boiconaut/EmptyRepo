@@ -94,7 +94,7 @@ void Screen::Screen_2(ErrorHandler *error, SensorsHandler *sensors){
 
 void Screen::SetupScreen(){
     this->begin(SCREEN_ADDR);
-    this->clearDisplay();
+    clearDisplay();
 }
 
 void Screen::UpdateScreen(ClockHandler *clk, SensorsHandler *sensors, ErrorHandler *error){

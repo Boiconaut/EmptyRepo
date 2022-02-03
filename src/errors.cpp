@@ -60,7 +60,7 @@ void ErrorHandler::CheckErrors(ClockHandler *clk, SensorsHandler *sensors){
     error_string += "\n";
 }
 
-void ErrorHandler::LogError(ErrorHandler *error){
-    Log(error_string, 1, error);
+void ErrorHandler::LogError(){
+    Log(error_string, 1, this);
     clear();
 }

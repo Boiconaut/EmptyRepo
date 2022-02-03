@@ -11,6 +11,7 @@
 #include "moto.h"
 #include "clock.h"
 #include "errors.h"
+#include "screen.h"
 
 class ServerHandler{
 private:
@@ -45,8 +46,9 @@ private:
 public:
     ServerHandler();
     ~ServerHandler();
-    void GetCredentials(ClockHandler *clk);
-    void SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error);
+    void GetCredentials(ClockHandler *clk, Screen *screen);
+    void SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error, Screen *screen);
+    NTPClient* NTP();
 };
 
 #endif

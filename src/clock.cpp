@@ -153,6 +153,11 @@ uint16_t ClockHandler::getDate(NTPClient *timeClient){
     return day;
 }
 
+void ClockHandler::GetDateTime(){
+    watchConsole();
+    getDateTime();
+}
+
 void ClockHandler::SetDateTime(uint8_t _date, uint8_t _month, uint8_t _year, 
                      uint8_t _hours, uint8_t _minutes, uint8_t _seconds){
     date = _date;
@@ -236,4 +241,8 @@ uint8_t ClockHandler::GetSeconds(){
 
 uint16_t ClockHandler::GetMillis(){
     return millisec;
+}
+
+void ClockHandler::SetMillis(uint16_t m){
+    millisec = m;
 }

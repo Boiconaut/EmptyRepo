@@ -26,7 +26,7 @@ public:
     ~ErrorHandler();
     void SetupErrors();
     void CheckErrors(ClockHandler *clk, SensorsHandler *sensors);
-    void LogError(ErrorHandler *error);
+    void LogError();
 };
 
 #endif

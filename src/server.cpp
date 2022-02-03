@@ -147,15 +147,18 @@ void ServerHandler::handle_Voltage(AsyncWebServerRequest *request, String data, 
     request->send(200, "text/plain", String(nominal_voltage));
 }
 
-void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clock, ErrorHandler *error){
+void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
+    #ifndef RELEASE
+    #endif
+
     json["voltage"] = String(sensors->GetVoltage());
     json["current"] = String(sensors->GetCurrent());
     json["power"] = String(sensors->GetPower());
     json["soc"] = String(sensors->GetSOC());
 
-    String date_hour = String(clock->GetHours());
-    String date_minute = clock->GetMinutes() < 10 ? "0" + String(clock->GetMinutes()) : String(clock->GetMinutes());
-    String date_second = clock->GetSeconds() < 10 ? "0" + String(clock->GetSeconds()) : String(clock->GetSeconds());
+    String date_hour = String(clk->GetHours());
+    String date_minute = clk->GetMinutes() < 10 ? "0" + String(clk->GetMinutes()) : String(clk->GetMinutes());
+    String date_second = clk->GetSeconds() < 10 ? "0" + String(clk->GetSeconds()) : String(clk->GetSeconds());
     String datetime = date_hour + ":" + date_minute + ":" + date_second;
     json["datetime"] = datetime;
 
@@ -175,7 +178,7 @@ void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, Clo
     else current_state = "Релаксация";
     json["state"] = current_state;
 
-    json["temperature"] = clock->GetTemperature();
+    json["temperature"] = clk->GetTemperature();
     json["capacity"] = String(sensors->GetCapacity()).substring(0, String(sensors->GetCapacity()).length() - 3);
 
     String error_state = error->ERROR_CODE ? "Ошибка" : "Ошибок нет";
@@ -188,7 +191,7 @@ void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, Clo
     json["error"] = error_code;
 }
 
-void ServerHandler::GetCredentials(ClockHandler *clk){
+void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen){
     File f = SD.open("/config.json", FILE_READ);
     if(f){
         DynamicJsonDocument doc(1024);
@@ -217,16 +220,39 @@ void ServerHandler::GetCredentials(ClockHandler *clk){
 
         WiFi.begin(net_ssid, net_password);
 
-        #ifndef RELEASE
-          while (WiFi.status() != WL_CONNECTED) 
-          {
-            delay(1000);
+        screen->setTextSize(0);
+        screen->setTextColor(1);
+        uint8_t n = 0;
+
+        while (WiFi.status() != WL_CONNECTED) 
+        {
+          delay(1000);
+          screen->clearDisplay();
+          screen->setCursor(1, 1);
+          screen->print("Network: ");
+          screen->print(net_ssid);
+          screen->setCursor(1, 10);
+          for(uint8_t i = 0; i < n; i++) screen->print(".");
+          n++;
+          if(n > 5) n = 0;
+          screen->display();
+
+          #ifndef RELEASE
             Serial.print(".");
-          }
+          #endif
+        }
+        #ifndef RELEASE
           Serial.println("");
           Serial.println("WiFi connected..!");
-          Serial.print("Got IP: "); 
-        #endif
+          Serial.print("Got IP: ");
+        #endif 
+
+        screen->clearDisplay();
+        screen->setCursor(1, 1);
+        screen->print("Network: ");
+        screen->print(net_ssid);
+        screen->setCursor(1, 10);
+        screen->print("Wifi connected!");
     
         timeClient.begin();
         timeClient.setTimeOffset(10800);
@@ -235,7 +261,11 @@ void ServerHandler::GetCredentials(ClockHandler *clk){
     }
 }
 
-void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
+NTPClient* ServerHandler::NTP(){
+  return &timeClient;
+}
+
+void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error, Screen *screen){
     WiFi.config(ip, gateway, subnet);
     #ifndef RELEASE
       Serial.println(WiFi.localIP());
@@ -261,6 +291,9 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
     server.on("/", HTTP_GET, [&](AsyncWebServerRequest *request) mutable{
       IsAuth = false;
       request->send(200, "text/html", htmlLogin());
+      #ifndef RELEASE
+        Serial.println("Called: server.on(\"/\")");
+      #endif
     });
 
     server.on("/data", HTTP_GET, [&](AsyncWebServerRequest *request) mutable{
@@ -274,6 +307,9 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
         if(token == valid_token){
           isAuthenticated = true;
         }*/
+        #ifndef RELEASE
+          Serial.println("Called: server.on(\"/data\")");
+         #endif
         
         if(IsAuth){
           request->send(200, "text/html", htmlData());
@@ -284,6 +320,9 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
     });
 
     server.on("/getdata", HTTP_GET, [&](AsyncWebServerRequest *request){
+        #ifndef RELEASE
+          Serial.println("Called: server.on(\"/getdata\")");
+        #endif
         assembleData(sensors, moto, clk, error);
         String json_string; 
         serializeJson(json, json_string);
@@ -326,6 +365,17 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
       });
       server.begin();
       
+      screen->setCursor(1, 19);
+      screen->print("IP: ");
+      screen->print(WiFi.localIP());
+      screen->setCursor(1, 28);
+      screen->println("HTTP server started");
+      screen->setCursor(1, 37);
+      screen->print("Mac address: ");
+      screen->setCursor(1, 46);
+      screen->print(WiFi.macAddress());
+      screen->display();
+
       #ifndef RELEASE
         Serial.println("HTTP server started");
         Serial.print("Mac address: ");

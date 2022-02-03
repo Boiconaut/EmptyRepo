@@ -28,7 +28,7 @@ public:
     ~ClockHandler();
     
     void SetupClock();
-    uint16_t GetDateTime(NTPClient *timeClient);
+    void GetDateTime();
     void SetDateTime(uint8_t _date, uint8_t _month, uint8_t _year, 
                      uint8_t _hours, uint8_t _minutes, uint8_t _seconds);
     float GetTemperature();
@@ -41,6 +41,7 @@ public:
     uint8_t GetMinutes();
     uint8_t GetSeconds();
     uint16_t GetMillis();
+    void SetMillis(uint16_t m);
 };
 
 #endif

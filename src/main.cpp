@@ -8,13 +8,14 @@
 #include "server.h"
 #include "sensors.h"
 #include "moto.h"
+#include "signals.h"
 
-TaskHandle_t SensorsTask;
-TaskHandle_t LogTask;
-TaskHandle_t ServerTask;
-TaskHandle_t ErrorsTask;
-TaskHandle_t ScreenTask;
-TaskHandle_t MotoTask;
+#define T_STACK_SIZE 10000
+#define T_LOOP_NAME "loop1"
+#define T_SIGNAL_NAME "signal"
+
+TaskHandle_t MainTask;
+TaskHandle_t SignalTask;
 
 Loggable logger;
 ErrorHandler error;
@@ -23,6 +24,19 @@ ClockHandler clk;
 ServerHandler server;
 SensorsHandler sensors;
 MotoHandler moto;
+SignalHandler signal;
+
+void loop1(void *param);
+void signalling(void *param);
+
+///////////////////////////
+//Lines to be deleted after adding multithreading algorithm
+unsigned long timer = 0;
+unsigned long logtimer = 0;
+unsigned long mototimer  = 0;
+unsigned long error_timer = 0;
+unsigned long get_average_timer = 0;
+///////////////////////////
 
 void setup() {
   #ifndef RELEASE
@@ -47,10 +61,75 @@ void setup() {
   screen.SetupScreen();
   clk.SetupClock();
   moto.SetupMotohours();
-  server.GetCredentials(&clk);
-  server.SetupServer(&sensors, &moto, &clk, &error);
+  server.GetCredentials(&clk, &screen);
+  server.SetupServer(&sensors, &moto, &clk, &error, &screen);
+  delay(2000);
+
+  xTaskCreatePinnedToCore(loop1, T_LOOP_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 0);
+  xTaskCreatePinnedToCore(signalling, T_SIGNAL_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 1);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  //////////////////////////////////////
+  // This code is to be deleted. There will be no loop in multithreading app
+  /*if(millis() - timer >= 100){
+    timer  = millis();
+    clk.SetMillis(millis() - get_average_timer);
+    sensors.ReadSensors();
+  }
+
+  if(millis() - get_average_timer >= 1000){
+    get_average_timer = millis();
+    clk.GetDateTime();
+    sensors.GetSecondAverage();
+    screen.UpdateScreen(&clk, &sensors, &error);
+  }
+
+  if(millis() - logtimer >= 5000){
+    logtimer = millis();
+    logger.LogData(&clk, &sensors, &error);
+    error.LogError();
+  }
+
+  if(millis() - mototimer >= 60000){
+    mototimer = millis();
+    moto.Save();
+    sensors.GetMinuteAverageCurrent();
+  }*/
+  //////////////////////////////////////////
+}
+
+void loop1(void *param){
+   for(;;){
+     if(millis() - timer >= 100){
+        timer  = millis();
+        clk.SetMillis(millis() - get_average_timer);
+        sensors.ReadSensors();
+      }
+
+      if(millis() - get_average_timer >= 1000){
+        get_average_timer = millis();
+        clk.GetDateTime();
+        sensors.GetSecondAverage();
+        screen.UpdateScreen(&clk, &sensors, &error);
+      }
+
+      if(millis() - logtimer >= 5000){
+        logtimer = millis();
+        logger.LogData(&clk, &sensors, &error);
+        error.LogError();
+      }
+
+      if(millis() - mototimer >= 60000){
+        mototimer = millis();
+        moto.Save();
+        sensors.GetMinuteAverageCurrent();
+      }
+   }
+}
+
+void signalling(void *param){
+    for(;;){
+      if(bitRead(error.ERROR_CODE, ERROR_LOW_VOLTAGE)) signal.RunAlertLowVoltage();
+    }
 }
