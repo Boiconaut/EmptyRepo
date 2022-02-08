@@ -7,11 +7,12 @@
 #include <ESPAsyncWebServer.h>
 #include <NTPClient.h>
 #include <ArduinoJson.h>
-#include "sensors.h"
-#include "moto.h"
-#include "clock.h"
-#include "errors.h"
+//#include "sensors.h"
+//#include "moto.h"
+//#include "clock.h"
+//#include "errors.h"
 #include "screen.h"
+#include "common.h"
 
 class ServerHandler{
 private:
@@ -33,7 +34,7 @@ private:
     boolean IsAuth;
 
     String getAuthToken();
-    void handle_NotFound(AsyncWebServerRequest *request);
+    void handle_NotFound(AsyncWebServerRequest *request); 
     void handle_onAuth(AsyncWebServerRequest *request, String data);
     void handle_Prognosis(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
     void handle_Voltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
@@ -47,7 +48,7 @@ public:
     ServerHandler();
     ~ServerHandler();
     void GetCredentials(ClockHandler *clk, Screen *screen);
-    void SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error, Screen *screen);
+    void SetupServer(Screen *screen);
     NTPClient* NTP();
 };
 

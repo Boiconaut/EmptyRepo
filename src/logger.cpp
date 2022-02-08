@@ -12,8 +12,12 @@ Logger::~Logger(){
 
 void Logger::Log(String data, uint8_t path, ErrorHandler *error){
     File file;
-    if(path == PATH_DATA) file = SD.open("/datalog.txt", FILE_APPEND);
-    else if(path == PATH_ERROR) file = SD.open("/errors.txt", FILE_APPEND);
+    /*if(path == PATH_DATA) file = SD.open("/datalog.txt", FILE_APPEND);
+    else if(path == PATH_ERROR) file = SD.open("/errors.txt", FILE_APPEND);*/
+    const char* filename;
+    if(path == PATH_DATA) filename = "/datalog.txt";
+    else if(path = PATH_ERROR) filename = "/errors.txt";
+    file = SD.open(filename, FILE_APPEND);
    
     if (file) {
       file.println(data);

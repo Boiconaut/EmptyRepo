@@ -3,12 +3,14 @@
 #include "config.h"
 #include "logging.h"
 #include "screen.h"
-#include "errors.h"
-#include "clock.h"
+//#include "errors.h"
+//#include "clock.h"
 #include "server.h"
-#include "sensors.h"
-#include "moto.h"
+//#include "sensors.h"
+//#include "moto.h"
 #include "signals.h"
+#include "common.h"
+#include "ftp.h"
 
 #define T_STACK_SIZE 10000
 #define T_LOOP_NAME "loop1"
@@ -25,6 +27,7 @@ ServerHandler server;
 SensorsHandler sensors;
 MotoHandler moto;
 SignalHandler signal;
+FTPHandler ftp(FTP_SERVER, FTP_USER, FTP_PASS, FTP_TIMEOUT, FTP_VERBOSE);
 
 void loop1(void *param);
 void signalling(void *param);
@@ -62,7 +65,7 @@ void setup() {
   clk.SetupClock();
   moto.SetupMotohours();
   server.GetCredentials(&clk, &screen);
-  server.SetupServer(&sensors, &moto, &clk, &error, &screen);
+  server.SetupServer(&screen);
   delay(2000);
 
   xTaskCreatePinnedToCore(loop1, T_LOOP_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 0);
@@ -105,6 +108,7 @@ void loop1(void *param){
         timer  = millis();
         clk.SetMillis(millis() - get_average_timer);
         sensors.ReadSensors();
+        error.CheckErrors(&clk, &sensors);
       }
 
       if(millis() - get_average_timer >= 1000){
@@ -132,4 +136,20 @@ void signalling(void *param){
     for(;;){
       if(bitRead(error.ERROR_CODE, ERROR_LOW_VOLTAGE)) signal.RunAlertLowVoltage();
     }
+}
+
+ErrorHandler* getError(){
+  return &error;
+}
+
+ClockHandler* getClock(){
+  return &clk;
+}
+
+SensorsHandler* getSensors(){
+  return &sensors;
+}
+
+MotoHandler* getMoto(){
+  return &moto;
 }

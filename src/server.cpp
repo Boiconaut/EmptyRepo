@@ -265,7 +265,7 @@ NTPClient* ServerHandler::NTP(){
   return &timeClient;
 }
 
-void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error, Screen *screen){
+void ServerHandler::SetupServer(Screen *screen){
     WiFi.config(ip, gateway, subnet);
     #ifndef RELEASE
       Serial.println(WiFi.localIP());
@@ -281,10 +281,10 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
           handle_onAuth(request, string_data);
         }
         if(request->url() == "/getprognosis"){
-          handle_Prognosis(request, dat, sensors);
+          handle_Prognosis(request, dat, getSensors());
         }
         if(request->url() == "/setvoltage"){
-          handle_Voltage(request, dat, sensors);
+          handle_Voltage(request, dat, getSensors());
         }
       });
     
@@ -323,7 +323,7 @@ void ServerHandler::SetupServer(SensorsHandler *sensors, MotoHandler *moto, Cloc
         #ifndef RELEASE
           Serial.println("Called: server.on(\"/getdata\")");
         #endif
-        assembleData(sensors, moto, clk, error);
+        assembleData(getSensors(), getMoto(), getClock(), getError());
         String json_string; 
         serializeJson(json, json_string);
         request->send(200, "text/json", json_string);

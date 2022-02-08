@@ -1,4 +1,3 @@
-#include <SD.h>
 #include "errors.h"
 
 ErrorHandler::ErrorHandler(){
@@ -61,6 +60,6 @@ void ErrorHandler::CheckErrors(ClockHandler *clk, SensorsHandler *sensors){
 }
 
 void ErrorHandler::LogError(){
-    Log(error_string, 1, this);
+    if(error_string.length() > 2) Log(error_string, 1, this);
     clear();
 }

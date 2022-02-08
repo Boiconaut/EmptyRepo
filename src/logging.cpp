@@ -1,4 +1,3 @@
-#include <SD.h>
 #include "logging.h"
 #include "errors.h"
 #include "config.h"

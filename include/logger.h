@@ -5,7 +5,8 @@
 #define PATH_DATA 0
 #define CHIP_SELECT 5
 
-//#include "errors.h"
+#include <SD.h>
+//#include "common.h"
 
 class ErrorHandler;
 

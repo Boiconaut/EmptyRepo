@@ -4,6 +4,7 @@
 #include "clock.h"
 #include "sensors.h"
 #include "logger.h"
+//#include "ftp.h"
 
 #define tonePin 17            
 #define RedLED 10             
@@ -14,6 +15,7 @@
 #define ERROR_NO_SD 2   
 
 class Logger;
+//class FTPHandler;
 
 class ErrorHandler : Logger {
 private:

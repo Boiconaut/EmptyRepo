@@ -11,6 +11,8 @@
 #define OLED_SCL 22  
 #define SCREEN_ADDR 0x3C
 
+class ErrorHandler;
+
 class Screen : public Adafruit_SH1106 {
 private:
     void Screen_1(ClockHandler *clk, SensorsHandler *sensors);
