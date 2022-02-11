@@ -3,7 +3,7 @@
 #include "errors.h"
 
 Logger::Logger(){
-
+  // : FTPHandler(FTP_SERVER, FTP_USER, FTP_PASS, FTP_TIMEOUT, FTP_VERBOSE)
 }
 
 Logger::~Logger(){

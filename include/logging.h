@@ -5,10 +5,11 @@
 #include "sensors.h"
 #include "errors.h"
 #include "logger.h"
+//#include "ftp.h"
 
 class ErrorHandler;
 
-class Loggable : Logger{
+class Loggable : Logger {
 private:
     String dataString;
 public:

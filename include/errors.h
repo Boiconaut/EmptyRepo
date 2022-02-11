@@ -4,7 +4,6 @@
 #include "clock.h"
 #include "sensors.h"
 #include "logger.h"
-//#include "ftp.h"
 
 #define tonePin 17            
 #define RedLED 10             
@@ -14,10 +13,9 @@
 #define ERROR_OVERCURRENT 1   
 #define ERROR_NO_SD 2   
 
-class Logger;
-//class FTPHandler;
+//class Logger;
 
-class ErrorHandler : Logger {
+class ErrorHandler : Logger{
 private:
     String error_string;
     void addMessage(String mes);

@@ -27,7 +27,6 @@ ServerHandler server;
 SensorsHandler sensors;
 MotoHandler moto;
 SignalHandler signal;
-FTPHandler ftp(FTP_SERVER, FTP_USER, FTP_PASS, FTP_TIMEOUT, FTP_VERBOSE);
 
 void loop1(void *param);
 void signalling(void *param);
