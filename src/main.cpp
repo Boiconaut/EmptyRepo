@@ -3,11 +3,7 @@
 #include "config.h"
 #include "logging.h"
 #include "screen.h"
-//#include "errors.h"
-//#include "clock.h"
 #include "server.h"
-//#include "sensors.h"
-//#include "moto.h"
 #include "signals.h"
 #include "common.h"
 #include "ftp.h"
@@ -61,7 +57,7 @@ void setup() {
   error.SetupErrors();
   logger.InitSD(&error);
   screen.SetupScreen();
-  clk.SetupClock();
+  //clk.SetupClock();
   moto.SetupMotohours();
   server.GetCredentials(&clk, &screen);
   server.SetupServer(&screen);

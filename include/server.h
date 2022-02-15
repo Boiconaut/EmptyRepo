@@ -7,10 +7,6 @@
 #include <ESPAsyncWebServer.h>
 #include <NTPClient.h>
 #include <ArduinoJson.h>
-//#include "sensors.h"
-//#include "moto.h"
-//#include "clock.h"
-//#include "errors.h"
 #include "screen.h"
 #include "common.h"
 
@@ -28,7 +24,7 @@ private:
     AsyncWebServer server = AsyncWebServer(80);
     WiFiUDP ntpUDP;               
     NTPClient timeClient = NTPClient(ntpUDP);
-    DynamicJsonDocument json = DynamicJsonDocument(2048); 
+    DynamicJsonDocument json = DynamicJsonDocument(512); 
 
     String valid_token;
     boolean IsAuth;

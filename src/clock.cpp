@@ -23,15 +23,6 @@ uint8_t ClockHandler::decToBcd(uint8_t val){
     return ((val / 10 * 16) + (val % 10));
 }
 
-void ClockHandler::watchConsole(){
-    if (Serial.available()) {      
-        if (Serial.read() == 84) {      
-            getDateTime();
-            Serial.println(" ");
-        }
-    }
-}
-
 uint8_t ClockHandler::getRegister(uint8_t regNo){
     Wire.beginTransmission(DS3231_I2C_ADDRESS); 
     Wire.write(regNo); 
@@ -154,7 +145,6 @@ uint16_t ClockHandler::getDate(NTPClient *timeClient){
 }
 
 void ClockHandler::GetDateTime(){
-    watchConsole();
     getDateTime();
 }
 
@@ -196,6 +186,13 @@ void ClockHandler::SyncTime(NTPClient *timeClient){
     date    = (byte) getDate(timeClient);
     month   = (byte) getMonth(timeClient);
     year    = (byte) getYear(timeClient);
+
+    Wire.beginTransmission(DS3231_I2C_ADDRESS); // 0x68 is DS3231 device address
+    Wire.write(0x0E); //
+    Wire.write(B00000000); //  EOSC-0-запуск генератора,BBSQW-0-SQW-вкл,CONV-1-измерение темп-ры,  RS2иRS1-частота SQW,INTCN-SQW-будильник или пила частотой RS1-RS2,A2IEиA1IE-прерывания по будильнику.
+    Wire.write(B00000000); //  OSF-0-запуск генератора,0,0,0,EN32kHz,BSY-во время корректировки(автосброс),A2FиA1F - срабатывание будильника
+    Wire.write(B10001000);     //to be commented
+    Wire.endTransmission();
     
     Wire.beginTransmission(DS3231_I2C_ADDRESS);
     Wire.write(0x00);
@@ -207,12 +204,12 @@ void ClockHandler::SyncTime(NTPClient *timeClient){
     Wire.write(decToBcd(month));   //0x05
     Wire.write(decToBcd(year));    //0x06
     Wire.endTransmission();
-    Wire.beginTransmission(DS3231_I2C_ADDRESS); // 0x68 is DS3231 device address
+    /*Wire.beginTransmission(DS3231_I2C_ADDRESS); // 0x68 is DS3231 device address
     Wire.write(0x0E); //
     Wire.write(B00000000); //  EOSC-0-запуск генератора,BBSQW-0-SQW-вкл,CONV-1-измерение темп-ры,  RS2иRS1-частота SQW,INTCN-SQW-будильник или пила частотой RS1-RS2,A2IEиA1IE-прерывания по будильнику.
     Wire.write(B00000000); //  OSF-0-запуск генератора,0,0,0,EN32kHz,BSY-во время корректировки(автосброс),A2FиA1F - срабатывание будильника
     Wire.write(B10001000);     //to be commented
-    Wire.endTransmission();
+    Wire.endTransmission();*/
 }
 
 uint8_t ClockHandler::GetDay(){

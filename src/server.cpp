@@ -320,9 +320,6 @@ void ServerHandler::SetupServer(Screen *screen){
     });
 
     server.on("/getdata", HTTP_GET, [&](AsyncWebServerRequest *request){
-        #ifndef RELEASE
-          Serial.println("Called: server.on(\"/getdata\")");
-        #endif
         assembleData(getSensors(), getMoto(), getClock(), getError());
         String json_string; 
         serializeJson(json, json_string);

@@ -6,7 +6,6 @@
 #define CHIP_SELECT 5
 
 #include <SD.h>
-//#include "ftp.h"
 
 class ErrorHandler;
 

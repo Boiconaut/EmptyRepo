@@ -135,10 +135,12 @@ void SensorsHandler::GetSecondAverage(){
       sum_soc += socs[i];
     }
 
-    voltage = sum_voltage / counter;
-    current = sum_current / counter;
-    power = sum_power / counter;
-    SOC = sum_soc / counter;
+    if(counter > 0){
+        voltage = sum_voltage / counter;
+        current = sum_current / counter;
+        power = sum_power / counter;
+        SOC = sum_soc / counter;
+    }
 
     counter = 0;
     tick();
@@ -153,7 +155,9 @@ void SensorsHandler::GetMinuteAverageCurrent(){
         sum += minute_currents[i];
     }
 
-    average_current = sum / minute_current_counter;
+    if(minute_current_counter > 0){
+        average_current = sum / minute_current_counter;
+    }
     minute_current_counter = 0;
 }
 
