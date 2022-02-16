@@ -2,6 +2,7 @@
 #define SENSORS_H
 
 #include <Arduino.h>
+#include "clock.h"
 
 #define VoltPin 36            
 #define DischargeCurrPin 39   
@@ -66,13 +67,12 @@ private:
     uint8_t counter; 
     uint8_t minute_current_counter;
 
-    uint8_t state_sec;
-    uint8_t state_min;
-    uint16_t state_hour;
+    TimeSpan state_time;
+    DateTime change_state_time;
 
     void setupAnalogInputs();
     uint8_t getSOC(float v);
-    void tick();
+    void tick(ClockHandler *clk);
 public:
     uint8_t STATE;
     float vmax, v90, v80, v70, v60, v50, v40, v30, v20, v10, vmin;
@@ -81,7 +81,7 @@ public:
     ~SensorsHandler();
 
     void ReadSensors();
-    void GetSecondAverage();
+    void GetSecondAverage(ClockHandler *clk);
     void GetMinuteAverageCurrent();
     void UpdateVoltageMap();
 
@@ -97,6 +97,7 @@ public:
     void SetNomCapacity(uint8_t c);
     float GetAverageCurrent();
     void SetVoltageQuot(float k);
+    void SetChangeStateTime(DateTime *dt);
 
     uint8_t GetMomentSOC();
     float GetMomentVoltage();

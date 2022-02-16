@@ -57,7 +57,7 @@ void setup() {
   error.SetupErrors();
   logger.InitSD(&error);
   screen.SetupScreen();
-  //clk.SetupClock();
+  clk.SetupClock(&sensors);
   moto.SetupMotohours();
   server.GetCredentials(&clk, &screen);
   server.SetupServer(&screen);
@@ -109,7 +109,7 @@ void loop1(void *param){
       if(millis() - get_average_timer >= 1000){
         get_average_timer = millis();
         clk.GetDateTime();
-        sensors.GetSecondAverage();
+        sensors.GetSecondAverage(&clk);
         screen.UpdateScreen(&clk, &sensors, &error);
       }
 
@@ -138,7 +138,7 @@ ErrorHandler* getError(){
 }
 
 ClockHandler* getClock(){
-  return &clk;
+    return &clk;
 }
 
 SensorsHandler* getSensors(){

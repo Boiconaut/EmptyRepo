@@ -13,10 +13,14 @@ MotoHandler::MotoHandler(){
 }
 
 void MotoHandler::read(){
-    motomin = EEPROM.read(min_cell);
+    uint8_t motomin = EEPROM.read(min_cell);
     uint8_t low = EEPROM.read(hour_low_cell);
     uint8_t high = EEPROM.read(hour_high_cell);
     motohour = word(high, low);
+    uint8_t _day = motohour / 24;
+    uint8_t _hour = motohour % 24;
+    moto_time = TimeSpan(_day, _hour, motomin, 0);
+    moto_relative = *getClock()->GetTimeNow();
 }
 
 void MotoHandler::SetupMotohours(){
@@ -32,21 +36,15 @@ void MotoHandler::Reset(){
 }
 
 void MotoHandler::Tick(){
-    motosec++;
-    if(motosec > 59){
-        motomin++;
-        motosec = 0;
-    }
-    if(motomin > 59){
-        motohour++;
-        motomin = 0;
-    }
+    moto_time = *getClock()->GetTimeNow() - moto_relative;
+    moto_relative = *getClock()->GetTimeNow();
 }
 
 void MotoHandler::Save(){
+    motohour = 24 * moto_time.days() + moto_time.hours();
     uint8_t high = highByte(motohour);
     uint8_t low = lowByte(motohour);
-    EEPROM.put(min_cell, motomin);
+    EEPROM.put(min_cell, moto_time.minutes());
     EEPROM.put(hour_low_cell, low);
     EEPROM.put(hour_high_cell, high);
     EEPROM.commit();
@@ -57,9 +55,9 @@ uint16_t MotoHandler::GetHours(){
 }
 
 uint8_t MotoHandler::GetMinutes(){
-    return motomin;
+    return moto_time.minutes();
 }
 
 uint8_t MotoHandler::GetSeconds(){
-    return motosec;
+    return moto_time.seconds();
 }

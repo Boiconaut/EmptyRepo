@@ -1,6 +1,8 @@
 #ifndef MOTO_H
 #define MOTO_H
 
+#include "common.h"
+
 #define LOAD_CURRENT 5.00
 
 #define MIN_CELL 0
@@ -9,9 +11,9 @@
 
 class MotoHandler{
 private:
+    TimeSpan moto_time;
+    DateTime moto_relative;
     uint16_t motohour;
-    uint8_t motomin;
-    uint8_t motosec;
 
     uint8_t min_cell; 
     uint8_t hour_low_cell; 

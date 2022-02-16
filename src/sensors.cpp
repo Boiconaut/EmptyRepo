@@ -12,10 +12,7 @@ SensorsHandler::SensorsHandler(){
     counter = 0;
     minute_current_counter = 0;
 
-    state_sec = 0;
-    state_min = 0;
-    state_hour = 0;
-
+    state_time = TimeSpan(0, 0, 0, 0);
     ReadSensors();
 }
 
@@ -38,70 +35,66 @@ void SensorsHandler::setupAnalogInputs(){
 }
 
 uint8_t SensorsHandler::getSOC(float v){
-    if(v >= v90 && v <= vmax){
-    return 90 + (v - v90)/(vmax - v90) * 10;
+    if(STATE == STATE_REST){
+        if(v >= v90 && v <= vmax){
+            return 90 + (v - v90)/(vmax - v90) * 10;
+        }
+        else if(v >= v80 && v <= v90){
+            return 80 + (v - v80)/(v90 - v80) * 10;
+        }
+        else if(v >= v70 && v <= v80){
+            return 70 + (v - v70)/(v80 - v70) * 10;
+        }
+        else if(v >= v60 && v <= v70){
+            return 60 + (v - v60)/(v70 - v60) * 10;
+        }
+        else if(v >= v50 && v <= v60){
+            return 50 + (v - v50)/(v60 - v50) * 10;
+        }
+        else if(v >= v40 && v <= v50){
+            return 40 + (v - v40)/(v50 - v40) * 10;
+        }
+        else if(v >= v30 && v <= v40){
+            return 30 + (v - v30)/(v40 - v30) * 10;
+        }
+        else if(v >= v20 && v <= v30){
+            return 20 + (v - v20)/(v30 - v20) * 10;
+        }
+        else if(v >= v10 && v <= v20){
+            return 10 + (v - v10)/(v20 - v10) * 10;
+        }
+        else if(v >= vmin && v <= v10){
+            return (v - vmin)/(v10 - vmin) * 10;
+        }
+        else if(v >= vmax){
+            return 100;
+        }
+        else{
+            return 0;
+        }
     }
-    else if(v >= v80 && v <= v90){
-        return 80 + (v - v80)/(v90 - v80) * 10;
-    }
-    else if(v >= v70 && v <= v80){
-        return 70 + (v - v70)/(v80 - v70) * 10;
-    }
-    else if(v >= v60 && v <= v70){
-        return 60 + (v - v60)/(v70 - v60) * 10;
-    }
-    else if(v >= v50 && v <= v60){
-        return 50 + (v - v50)/(v60 - v50) * 10;
-    }
-    else if(v >= v40 && v <= v50){
-        return 40 + (v - v40)/(v50 - v40) * 10;
-    }
-    else if(v >= v30 && v <= v40){
-        return 30 + (v - v30)/(v40 - v30) * 10;
-    }
-    else if(v >= v20 && v <= v30){
-        return 20 + (v - v20)/(v30 - v20) * 10;
-    }
-    else if(v >= v10 && v <= v20){
-        return 10 + (v - v10)/(v20 - v10) * 10;
-    }
-    else if(v >= vmin && v <= v10){
-        return (v - vmin)/(v10 - vmin) * 10;
-    }
-    else if(v >= vmax){
-        return 100;
-    }
-    else{
-        return 0;
-    }
-}
 
-void SensorsHandler::tick(){
-     state_sec++;
-    if(state_sec > 59){
-        state_min++;
-        state_sec = 0;
-    }
-    if(state_min > 59){
-        state_hour++;
-        state_min = 0;
+    uint8_t prev_soc = 0;
+    //if(STATE_BEFORE == STATE_REST) prev_soc = soc;
+
+    if(STATE == STATE_CHARGE){
+        return (_capacity / (1000 * NOM_CAPACITY)) * 100;
     }
 
     if(STATE == STATE_DISCHARGE){
-        _capacity += -1 * (current / 3.60);
+        return 100 - (_capacity / (1000 * NOM_CAPACITY)) * 100;
     }
-    else if(STATE == STATE_CHARGE){
-        _capacity += current / 3.60;
+}
+
+void SensorsHandler::tick(ClockHandler *clk){
+    state_time = *clk->GetTimeNow() - change_state_time;
+  
+    if(STATE == STATE_DISCHARGE || STATE == STATE_CHARGE){
+        _capacity = state_time.totalseconds() * (current / 3.60);
     }
-    else {
-        _capacity = 0.0;
-    }
-    
-    if(STATE != STATE_BEFORE){
-        state_hour = 0;
-        state_min = 0;
-        state_sec = 0;
-    }
+    else _capacity = 0.00;
+
+    if(STATE != STATE_BEFORE) change_state_time = *clk->GetTimeNow();
     STATE_BEFORE = STATE;
 }
 
@@ -122,7 +115,7 @@ void SensorsHandler::ReadSensors(){
     counter++;
 }
 
-void SensorsHandler::GetSecondAverage(){
+void SensorsHandler::GetSecondAverage(ClockHandler *clk){
     float sum_voltage = 0;
     float sum_current = 0;
     float sum_power = 0;
@@ -143,7 +136,7 @@ void SensorsHandler::GetSecondAverage(){
     }
 
     counter = 0;
-    tick();
+    tick(clk);
     
     minute_currents[minute_current_counter] = current;
     minute_current_counter++;
@@ -212,15 +205,15 @@ float SensorsHandler::GetMomentPower(){
 }
 
 uint16_t SensorsHandler::GetHours(){
-    return state_hour;
+    return state_time.hours();
 }
 
 uint8_t SensorsHandler::GetMinutes(){
-    return state_min;
+    return state_time.minutes();
 }
 
 uint8_t SensorsHandler::GetSeconds(){
-    return state_sec;
+    return state_time.seconds();
 }
 
 uint8_t SensorsHandler::GetNomVoltage(){
@@ -245,4 +238,8 @@ float SensorsHandler::GetAverageCurrent(){
 
 void SensorsHandler::SetVoltageQuot(float k){
     kVSOC = k;
+}
+
+void SensorsHandler::SetChangeStateTime(DateTime *dt){
+    change_state_time = *dt;
 }
