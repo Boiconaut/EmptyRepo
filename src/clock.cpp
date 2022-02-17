@@ -20,7 +20,7 @@ void ClockHandler::SetupClock(SensorsHandler *sensors){
     }
 
     //adjust(DateTime(F(__DATE__), F(__TIME__)));
-    sensors->SetChangeStateTime(&now());
+    sensors->SetChangeStateTime(&_now);
 }
 
 void ClockHandler::GetDateTime(){

@@ -5,7 +5,9 @@
 #include <NTPClient.h>
 #include <Arduino.h>
 #include <RTCLib.h>
-#include "common.h"
+#include "sensors.h"
+
+class SensorsHandler;
 
 class ClockHandler : RTC_DS3231{
 private:

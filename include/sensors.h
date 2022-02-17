@@ -30,6 +30,8 @@
 #define kI 30.3
 #define kVSOC_INIT 4.4
 
+class ClockHandler;
+
 class SensorsHandler{
 private:
     float _capacity;

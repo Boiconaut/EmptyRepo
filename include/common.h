@@ -6,6 +6,8 @@
 #include "sensors.h"
 #include "moto.h"
 
+class MotoHandler;
+
 ErrorHandler* getError();
 ClockHandler* getClock();
 SensorsHandler* getSensors();
