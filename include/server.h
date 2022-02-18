@@ -43,7 +43,7 @@ private:
 public:
     ServerHandler();
     ~ServerHandler();
-    void GetCredentials(ClockHandler *clk, Screen *screen);
+    void GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors);
     void SetupServer(Screen *screen);
     NTPClient* NTP();
 };

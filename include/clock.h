@@ -18,9 +18,9 @@ public:
     ~ClockHandler();
     
     void SetupClock(SensorsHandler *sensors);
-    void GetDateTime();
+    void GetDateTime(NTPClient *timeClient, SensorsHandler *sensors);
     float GetTemperature();
-    void SyncTime(NTPClient *timeClient);
+    void SyncTime(NTPClient *timeClient, SensorsHandler *sensors);
     DateTime* GetTimeNow();
     
     uint8_t GetDay();

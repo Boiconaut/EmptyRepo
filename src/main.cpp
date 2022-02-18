@@ -59,7 +59,7 @@ void setup() {
   screen.SetupScreen();
   clk.SetupClock(&sensors);
   moto.SetupMotohours();
-  server.GetCredentials(&clk, &screen);
+  server.GetCredentials(&clk, &screen, &sensors);
   server.SetupServer(&screen);
   delay(2000);
 
@@ -108,7 +108,7 @@ void loop1(void *param){
 
       if(millis() - get_average_timer >= 1000){
         get_average_timer = millis();
-        clk.GetDateTime();
+        clk.GetDateTime(server.NTP(), &sensors);
         sensors.GetSecondAverage(&clk);
         screen.UpdateScreen(&clk, &sensors, &error);
       }

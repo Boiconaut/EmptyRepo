@@ -20,11 +20,17 @@ void ClockHandler::SetupClock(SensorsHandler *sensors){
     }
 
     //adjust(DateTime(F(__DATE__), F(__TIME__)));
-    sensors->SetChangeStateTime(&_now);
 }
 
-void ClockHandler::GetDateTime(){
-    _now = now();
+void ClockHandler::GetDateTime(NTPClient *timeClient, SensorsHandler *sensors){
+    if(now().day() > 31 || now().hour() > 24 || now().minute() > 59 || now().second() > 59){
+        timeClient->update();
+        SyncTime(timeClient, sensors);
+        Serial.println("Time error! RTC resync");
+    }
+    else {
+        _now = now();
+    }
 }
 
 DateTime* ClockHandler::GetTimeNow(){
@@ -35,7 +41,7 @@ float ClockHandler::GetTemperature(){
     return getTemperature();
 }
 
-void ClockHandler::SyncTime(NTPClient *timeClient){
+void ClockHandler::SyncTime(NTPClient *timeClient, SensorsHandler *sensors){
     time_t rawtime = timeClient->getEpochTime();
     struct tm * ti;
     ti = localtime (&rawtime);
@@ -47,6 +53,7 @@ void ClockHandler::SyncTime(NTPClient *timeClient){
     _now = now();
     adjust(DateTime(year, month, date, 
             timeClient->getHours(), timeClient->getMinutes(), timeClient->getSeconds()));
+    sensors->SetChangeStateTime(&_now);
 }
 
 uint8_t ClockHandler::GetDay(){

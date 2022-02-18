@@ -191,7 +191,7 @@ void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, Clo
     json["error"] = error_code;
 }
 
-void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen){
+void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors){
     File f = SD.open("/config.json", FILE_READ);
     if(f){
         DynamicJsonDocument doc(1024);
@@ -205,13 +205,6 @@ void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen){
         f.close();
         
         #ifndef RELEASE
-          Serial.print("\nString config: ");
-          Serial.println(s);
-          Serial.print("\nString ssid: ");
-          Serial.println(s1);
-          Serial.print("\nString password: ");
-          Serial.println(s2);
-
           Serial.print("Connecting to ");
           Serial.print(net_ssid);
           Serial.print(" with password ");
@@ -257,7 +250,7 @@ void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen){
         timeClient.begin();
         timeClient.setTimeOffset(10800);
         timeClient.update();
-        clk->SyncTime(&timeClient);
+        clk->SyncTime(&timeClient, sensors);
     }
 }
 
