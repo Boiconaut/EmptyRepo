@@ -26,8 +26,8 @@
 #define V10 2.96
 #define VMIN 2.20
 
-#define kVD 22
-#define kI 30.3
+#define k_VD 22
+#define k_I 30.3
 #define kVSOC_INIT 4.4
 
 class ClockHandler;
@@ -40,6 +40,8 @@ private:
     uint8_t NOM_CAPACITY;
         
     float kVSOC;   //For calculating SOC: kVD / 5 for 12 V  
+    float kVD;
+    float kI;
 
     uint16_t VoltageValue; 
     uint16_t ChargeCurrentValue; 
@@ -100,6 +102,11 @@ public:
     float GetAverageCurrent();
     void SetVoltageQuot(float k);
     void SetChangeStateTime(DateTime *dt);
+
+    void SetkVD(float k);
+    float GetkVD();
+    void SetkI(float k);
+    float GetkI();
 
     uint8_t GetMomentSOC();
     float GetMomentVoltage();

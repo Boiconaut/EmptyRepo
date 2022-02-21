@@ -28,15 +28,20 @@ private:
 
     String valid_token;
     boolean IsAuth;
+    boolean IsAdmin;
 
     String getAuthToken();
     void handle_NotFound(AsyncWebServerRequest *request); 
     void handle_onAuth(AsyncWebServerRequest *request, String data);
     void handle_Prognosis(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
     void handle_Voltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
+    void handle_CalibrateVoltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
+    void handle_CalibrateCurrent(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
+    void handle_SetCapacity(AsyncWebServerRequest *request, String data, SensorsHandler *sensors);
     void assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error);
 
     String htmlData();
+    String htmlDataAdmin();
     String htmlLogin();
     String htmlInvalid();
     String htmlNotFound();

@@ -2,6 +2,8 @@
 
 SensorsHandler::SensorsHandler(){
     kVSOC = kVSOC_INIT;
+    kVD = k_VD;
+    kI = k_I;
     UpdateVoltageMap();
 
     _capacity = 0.00;
@@ -251,4 +253,20 @@ void SensorsHandler::SetVoltageQuot(float k){
 
 void SensorsHandler::SetChangeStateTime(DateTime *dt){
     change_state_time = *dt;
+}
+
+void SensorsHandler::SetkVD(float k){
+    kVD = k;
+}
+
+void SensorsHandler::SetkI(float k){
+    kI = k;
+}
+
+float SensorsHandler::GetkVD(){
+    return kVD;
+}
+
+float SensorsHandler::GetkI(){
+    return kI;
 }

@@ -7,6 +7,8 @@
 #include "resourses/styles/Style.h"
 #include "resourses/scripts/DataScript.h"
 #include "resourses/scripts/LoginScript.h"
+#include "resourses/markup/Admin.h"
+#include "resourses/scripts/AdminScript.h"
 #include "config.h"
 
 ServerHandler::ServerHandler(){
@@ -32,6 +34,26 @@ String ServerHandler::htmlData(){
     ptr += s;
     ptr +="</body>\n";
     ptr +="</html>\n";
+    return ptr;
+}
+
+String ServerHandler::htmlDataAdmin(){
+    String ptr = "<!DOCTYPE html> <html>\n";
+    String h = webheader;
+    ptr += h;
+    String data = data_html;
+    ptr += data;
+    String s = script;
+    ptr += s;
+
+    String admin = admin_html;
+    ptr += admin_html;
+    String ads = admin_script;
+    ptr += ads;
+    
+    ptr +="</body>\n";
+    ptr +="</html>\n";
+    
     return ptr;
 }
 
@@ -77,11 +99,17 @@ void ServerHandler::handle_onAuth(AsyncWebServerRequest *request, String data){
     String body = data;
   
     String correct = "{\"login\":\"user\",\"password\":\"bms\"}";
+    String correct_admin = "{\"login\":\"admin\",\"password\":\"bms\"}";
   
     if(body == correct){
       token = getAuthToken();
       valid_token = token;
       IsAuth = true;
+    }
+    else if(body == correct_admin){
+      token = getAuthToken();
+      valid_token = token;
+      IsAdmin = true;
     }
     else{
       token = "0";
@@ -132,6 +160,39 @@ void ServerHandler::handle_Prognosis(AsyncWebServerRequest *request, String data
     }
 
     request->send(200, "text/plain", prognosis);
+}
+
+void ServerHandler::handle_CalibrateVoltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+    String body = data;
+    int str_length = body.length() + 1;
+    char char_array[str_length];
+    body.toCharArray(char_array, str_length);
+    float v = atof(char_array);
+
+    sensors->SetkVD(v / sensors->GetkVD());
+    request->send(200, "text/plain", String(v));
+}
+
+void ServerHandler::handle_CalibrateCurrent(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+  String body = data;
+  int str_length = body.length() + 1;
+  char char_array[str_length];
+  body.toCharArray(char_array, str_length);
+  float cur = atof(char_array);
+
+  sensors->SetkI(cur / sensors->GetkI());
+  request->send(200, "text/plain", String(cur));
+}
+
+void ServerHandler::handle_SetCapacity(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+  String body = data;
+  int str_length = body.length() + 1;
+  char char_array[str_length];
+  body.toCharArray(char_array, str_length);
+  float capacity = atof(char_array);
+  
+  sensors->SetNomCapacity((int) capacity);
+  request->send(200, "text/plain", String(sensors->GetNomCapacity()));
 }
 
 void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
@@ -263,10 +324,20 @@ void ServerHandler::SetupServer(Screen *screen){
         if(request->url() == "/getprognosis"){
           handle_Prognosis(request, dat, getSensors());
         }
+        if(request->url() == "/calibratevoltage"){
+          handle_CalibrateVoltage(request, dat, getSensors());
+        }
+        if(request->url() == "/calibratecurrent"){
+          handle_CalibrateCurrent(request, dat, getSensors());
+        }
+        if(request->url() == "/setcapacity"){
+          handle_SetCapacity(request, dat, getSensors());
+        }
       });
     
     server.on("/", HTTP_GET, [&](AsyncWebServerRequest *request) mutable{
       IsAuth = false;
+      IsAdmin = false;
       request->send(200, "text/html", htmlLogin());
       #ifndef RELEASE
         Serial.println("Called: server.on(\"/\")");
@@ -280,6 +351,9 @@ void ServerHandler::SetupServer(Screen *screen){
         
         if(IsAuth){
           request->send(200, "text/html", htmlData());
+        }
+        else if(IsAdmin){
+          request->send(200, "text/html", htmlDataAdmin());
         }
         else{
           request->send(200, "text/html", htmlInvalid());
