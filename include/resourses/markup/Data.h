@@ -6,13 +6,6 @@
 const char data_html[] PROGMEM = R"=====(
     <body>
         <h1>Aspil Shunt v 1.2 Web Interface</h1>
-        
-        <h2>Выберите номинальное напряжение АКБ, B</h2>
-        <button id="set12" class="btn btn-danger">12</button>
-        <button id="set24" class="btn btn-primary">24</button>
-        <button id="set36" class="btn btn-primary">36</button>
-        <button id="set48" class="btn btn-primary">48</button>
-        
         <table>
              <tr id="state-tr" class="no-errors">
                 <td><h3>Состояние: </h3> </td>

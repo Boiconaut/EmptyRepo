@@ -25,6 +25,8 @@ void SensorsHandler::setupAnalogInputs(){
     ChargeCurrentValue = analogRead(ChargeCurrPin);                                  
     DischargeCurrentValue = analogRead(DischargeCurrPin); 
 
+    if(VoltageValue < 115) VoltageValue = 0;
+
     if (ChargeCurrentValue > DischargeCurrentValue) STATE = STATE_CHARGE;
     else if (ChargeCurrentValue < DischargeCurrentValue) STATE = STATE_DISCHARGE;
     else STATE = STATE_REST;
@@ -136,6 +138,13 @@ void SensorsHandler::GetSecondAverage(ClockHandler *clk){
     }
 
     counter = 0;
+
+    if(voltage <= 14.6) NOM_VOLTAGE = 12;
+    else if(voltage > 14.6 && voltage <= 29.2) NOM_VOLTAGE = 24;
+    else if(voltage > 29.2 && voltage <= 43.8) NOM_VOLTAGE = 36;
+    else NOM_VOLTAGE = 48;
+
+    UpdateVoltageMap();
     tick(clk);
     
     minute_currents[minute_current_counter] = current;

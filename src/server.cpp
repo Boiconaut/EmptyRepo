@@ -134,19 +134,6 @@ void ServerHandler::handle_Prognosis(AsyncWebServerRequest *request, String data
     request->send(200, "text/plain", prognosis);
 }
 
-void ServerHandler::handle_Voltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
-    String body = data;
-    int str_length = body.length() + 1;
-    char char_array[str_length];
-    body.toCharArray(char_array, str_length);
-    
-    float nominal_voltage = atof(char_array);
-    sensors->SetNomVoltage((uint8_t)nominal_voltage);
-    sensors->SetVoltageQuot((nominal_voltage / 60) * 14.65);
-    sensors->UpdateVoltageMap();
-    request->send(200, "text/plain", String(nominal_voltage));
-}
-
 void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
     #ifndef RELEASE
     #endif
@@ -276,9 +263,6 @@ void ServerHandler::SetupServer(Screen *screen){
         if(request->url() == "/getprognosis"){
           handle_Prognosis(request, dat, getSensors());
         }
-        if(request->url() == "/setvoltage"){
-          handle_Voltage(request, dat, getSensors());
-        }
       });
     
     server.on("/", HTTP_GET, [&](AsyncWebServerRequest *request) mutable{
@@ -290,16 +274,6 @@ void ServerHandler::SetupServer(Screen *screen){
     });
 
     server.on("/data", HTTP_GET, [&](AsyncWebServerRequest *request) mutable{
-        /*Serial.print("Token: ");
-        Serial.print(token);
-        Serial.print(" ");
-        Serial.print("Valid token: ");
-        Serial.print(valid_token);
-        Serial.print("\n");
-      
-        if(token == valid_token){
-          isAuthenticated = true;
-        }*/
         #ifndef RELEASE
           Serial.println("Called: server.on(\"/data\")");
          #endif

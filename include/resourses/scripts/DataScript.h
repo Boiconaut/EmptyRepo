@@ -10,68 +10,12 @@ const prognosisForm = document.getElementById("prognosisForm");
 const prognosisField = document.getElementById("prognosis-input");
 const prognosisDisplay = document.getElementById("prognosis");
 
-const set12 = document.getElementById("set12");
-const set24 = document.getElementById("set24");
-const set36 = document.getElementById("set36");
-const set48 = document.getElementById("set48");
-let voltages = [set12, set24, set36, set48];
-
 const state_tr = document.getElementById("state-tr");
 
 setInterval(function(){
         getData();
     }, 1000);
-
-voltages.forEach(function(item, index, array){
-  item.onclick = function(){
-    let voltage;
-
-    if(index == 0){
-      voltage = "12";
-    }
-    if(index == 1){
-      voltage = "24";
-    }
-    if(index == 2){
-      voltage = "36";
-    }
-    if(index == 3){
-      voltage = "48";
-    }
-
-    const req = new XMLHttpRequest();
-
-    req.onreadystatechange = function() {
-          if(this.readyState == 4 && this.status == 200){
-             const res = this.responseText;
-             let button;
-
-             set12.className = "btn btn-primary";
-             set24.className = "btn btn-primary";
-             set36.className = "btn btn-primary";
-             set48.className = "btn btn-primary";
-
-             if(res == "12.00"){
-               set12.className = "btn btn-danger";
-             }
-             if(res == "24.00"){
-               set24.className = "btn btn-danger";
-             }
-             if(res == "36.00"){
-               set36.className = "btn btn-danger";
-             }
-             if(res == "48.00"){
-               set48.className = "btn btn-danger";
-             }
-           }
-      };
     
-    req.open("POST", "setvoltage", true);
-    req.setRequestHeader("Content-Type", "text/plain");
-    req.send(voltage);
-  }
-});
-
 function getData() {
     let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {

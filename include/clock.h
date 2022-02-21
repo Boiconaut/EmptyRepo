@@ -13,6 +13,7 @@ class ClockHandler : RTC_DS3231{
 private:
     uint16_t millisec;
     DateTime _now;
+    void _displayTime();
 public:
     ClockHandler();
     ~ClockHandler();
@@ -25,7 +26,7 @@ public:
     
     uint8_t GetDay();
     uint8_t GetMonth();
-    uint8_t GetYear();
+    uint16_t GetYear();
     uint8_t GetHours();
     uint8_t GetMinutes();
     uint8_t GetSeconds();
