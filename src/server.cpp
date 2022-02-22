@@ -11,20 +11,30 @@
 #include "resourses/scripts/AdminScript.h"
 #include "config.h"
 
-ServerHandler::ServerHandler(){
+IPAddress server_scope::ip = IPAddress(192, 168, 0, 44);
+IPAddress server_scope::gateway = IPAddress(192, 168, 0, 1);
+IPAddress server_scope::subnet = IPAddress(255, 255, 255, 0);
 
-}
+AsyncWebServer server_scope::server = AsyncWebServer(80);
+WiFiUDP server_scope::ntpUDP = WiFiUDP();
+NTPClient server_scope::timeClient = NTPClient(ntpUDP);
+DynamicJsonDocument server_scope::json = DynamicJsonDocument(512);
 
-ServerHandler::~ServerHandler(){
-  
-}
+const char* server_scope::user_login;
+const char* server_scope::user_password;
+const char* server_scope::net_ssid;
+const char* server_scope::net_password;
 
-String ServerHandler::getAuthToken(){
+String server_scope::valid_token;
+boolean server_scope::IsAuth = false;
+boolean server_scope::IsAdmin = false;
+
+String server_scope::getAuthToken(){
     unsigned long token = random(998) + 1;
     return String(token);
 }
 
-String ServerHandler::htmlData(){
+String server_scope::htmlData(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -37,7 +47,7 @@ String ServerHandler::htmlData(){
     return ptr;
 }
 
-String ServerHandler::htmlDataAdmin(){
+String server_scope::htmlDataAdmin(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -57,7 +67,7 @@ String ServerHandler::htmlDataAdmin(){
     return ptr;
 }
 
-String ServerHandler::htmlInvalid(){
+String server_scope::htmlInvalid(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -72,7 +82,7 @@ String ServerHandler::htmlInvalid(){
     return ptr;
 }
 
-String ServerHandler::htmlLogin(){
+String server_scope::htmlLogin(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -85,7 +95,7 @@ String ServerHandler::htmlLogin(){
     return ptr;
 }
 
-String ServerHandler::htmlNotFound(){
+String server_scope::htmlNotFound(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -94,7 +104,7 @@ String ServerHandler::htmlNotFound(){
     return ptr;
 }
 
-void ServerHandler::handle_onAuth(AsyncWebServerRequest *request, String data){
+void server_scope::handle_onAuth(AsyncWebServerRequest *request, String data){
     String token;
     String body = data;
   
@@ -123,7 +133,7 @@ void ServerHandler::handle_onAuth(AsyncWebServerRequest *request, String data){
     request->send(200, "text/json", json_token); 
 }
 
-void ServerHandler::handle_Prognosis(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void server_scope::handle_Prognosis(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
     String body = data;
     int str_length = body.length() + 1;
     char char_array[str_length];
@@ -162,7 +172,7 @@ void ServerHandler::handle_Prognosis(AsyncWebServerRequest *request, String data
     request->send(200, "text/plain", prognosis);
 }
 
-void ServerHandler::handle_CalibrateVoltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void server_scope::handle_CalibrateVoltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
     String body = data;
     int str_length = body.length() + 1;
     char char_array[str_length];
@@ -173,7 +183,7 @@ void ServerHandler::handle_CalibrateVoltage(AsyncWebServerRequest *request, Stri
     request->send(200, "text/plain", String(v));
 }
 
-void ServerHandler::handle_CalibrateCurrent(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void server_scope::handle_CalibrateCurrent(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
   String body = data;
   int str_length = body.length() + 1;
   char char_array[str_length];
@@ -184,7 +194,7 @@ void ServerHandler::handle_CalibrateCurrent(AsyncWebServerRequest *request, Stri
   request->send(200, "text/plain", String(cur));
 }
 
-void ServerHandler::handle_SetCapacity(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void server_scope::handle_SetCapacity(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
   String body = data;
   int str_length = body.length() + 1;
   char char_array[str_length];
@@ -195,7 +205,7 @@ void ServerHandler::handle_SetCapacity(AsyncWebServerRequest *request, String da
   request->send(200, "text/plain", String(sensors->GetNomCapacity()));
 }
 
-void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
+void server_scope::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
     #ifndef RELEASE
     #endif
 
@@ -239,7 +249,7 @@ void ServerHandler::assembleData(SensorsHandler *sensors, MotoHandler *moto, Clo
     json["error"] = error_code;
 }
 
-void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors){
+void server_scope::GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors){
     File f = SD.open("/config.json", FILE_READ);
     if(f){
         DynamicJsonDocument doc(1024);
@@ -302,11 +312,11 @@ void ServerHandler::GetCredentials(ClockHandler *clk, Screen *screen, SensorsHan
     }
 }
 
-NTPClient* ServerHandler::NTP(){
+NTPClient* server_scope::NTP(){
   return &timeClient;
 }
 
-void ServerHandler::SetupServer(Screen *screen){
+void server_scope::SetupServer(Screen *screen){
     WiFi.config(ip, gateway, subnet);
     #ifndef RELEASE
       Serial.println(WiFi.localIP());

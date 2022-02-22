@@ -10,25 +10,24 @@
 #include "screen.h"
 #include "common.h"
 
-class ServerHandler{
-private:
-    const char *user_login;
-    const char *user_password;
-    const char *net_ssid;
-    const char *net_password;
+namespace server_scope{
+    extern const char *user_login;
+    extern const char *user_password;
+    extern const char *net_ssid;
+    extern const char *net_password;
 
-    IPAddress ip = IPAddress(192,168,0,44);      
-    IPAddress gateway = IPAddress(192,168,0,1);   
-    IPAddress subnet = IPAddress(255,255,255,0);  
+    extern IPAddress ip;      
+    extern IPAddress gateway;   
+    extern IPAddress subnet;  
 
-    AsyncWebServer server = AsyncWebServer(80);
-    WiFiUDP ntpUDP;               
-    NTPClient timeClient = NTPClient(ntpUDP);
-    DynamicJsonDocument json = DynamicJsonDocument(512); 
+    extern AsyncWebServer server;
+    extern WiFiUDP ntpUDP;               
+    extern NTPClient timeClient;
+    extern DynamicJsonDocument json; 
 
-    String valid_token;
-    boolean IsAuth;
-    boolean IsAdmin;
+    extern String valid_token;
+    extern boolean IsAuth;
+    extern boolean IsAdmin;
 
     String getAuthToken();
     void handle_NotFound(AsyncWebServerRequest *request); 
@@ -45,12 +44,10 @@ private:
     String htmlLogin();
     String htmlInvalid();
     String htmlNotFound();
-public:
-    ServerHandler();
-    ~ServerHandler();
+
     void GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors);
     void SetupServer(Screen *screen);
     NTPClient* NTP();
-};
+}
 
 #endif

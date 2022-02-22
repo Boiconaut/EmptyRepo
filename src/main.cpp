@@ -19,7 +19,6 @@ Loggable logger;
 ErrorHandler error;
 Screen screen(OLED_SDA, OLED_SCL);
 ClockHandler clk;
-ServerHandler server;
 SensorsHandler sensors;
 MotoHandler moto;
 SignalHandler signal;
@@ -59,8 +58,8 @@ void setup() {
   screen.SetupScreen();
   clk.SetupClock(&sensors);
   moto.SetupMotohours();
-  server.GetCredentials(&clk, &screen, &sensors);
-  server.SetupServer(&screen);
+  server_scope::GetCredentials(&clk, &screen, &sensors);
+  server_scope::SetupServer(&screen);
   delay(2000);
 
   xTaskCreatePinnedToCore(loop1, T_LOOP_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 0);
@@ -68,33 +67,6 @@ void setup() {
 }
 
 void loop() {
-  //////////////////////////////////////
-  // This code is to be deleted. There will be no loop in multithreading app
-  /*if(millis() - timer >= 100){
-    timer  = millis();
-    clk.SetMillis(millis() - get_average_timer);
-    sensors.ReadSensors();
-  }
-
-  if(millis() - get_average_timer >= 1000){
-    get_average_timer = millis();
-    clk.GetDateTime();
-    sensors.GetSecondAverage();
-    screen.UpdateScreen(&clk, &sensors, &error);
-  }
-
-  if(millis() - logtimer >= 5000){
-    logtimer = millis();
-    logger.LogData(&clk, &sensors, &error);
-    error.LogError();
-  }
-
-  if(millis() - mototimer >= 60000){
-    mototimer = millis();
-    moto.Save();
-    sensors.GetMinuteAverageCurrent();
-  }*/
-  //////////////////////////////////////////
 }
 
 void loop1(void *param){
@@ -108,7 +80,7 @@ void loop1(void *param){
 
       if(millis() - get_average_timer >= 1000){
         get_average_timer = millis();
-        clk.GetDateTime(server.NTP(), &sensors);
+        clk.GetDateTime(&server_scope::timeClient, &sensors);
         sensors.GetSecondAverage(&clk);
         screen.UpdateScreen(&clk, &sensors, &error);
       }
