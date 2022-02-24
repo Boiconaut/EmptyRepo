@@ -38,6 +38,7 @@ private:
     uint8_t STATE_BEFORE;
     uint8_t NOM_VOLTAGE;
     uint8_t NOM_CAPACITY;
+    uint16_t state_hour;
         
     float kVSOC;   //For calculating SOC: kVD / 5 for 12 V  
     float kVD;
@@ -116,6 +117,7 @@ public:
     uint16_t GetHours();
     uint8_t GetMinutes();
     uint8_t GetSeconds();
+    uint16_t GetStateHour();
 };
 
 #endif

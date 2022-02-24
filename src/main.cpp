@@ -48,6 +48,9 @@ void setup() {
       f.print("\"ip\": \"192.168.0.44\", ");
       f.print("\"gateway\": \"192.168.0.1\", ");
       f.print("\"subnet\": \"255.255.255.0\"");
+      f.print("\"kVD\": 22, ");
+      f.print("\"kI\": 30.3, ");
+      f.print("\"cnom\": 6,");
       f.println("}");
       f.close();
     }

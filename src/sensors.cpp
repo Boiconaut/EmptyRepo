@@ -13,6 +13,7 @@ SensorsHandler::SensorsHandler(){
     NOM_CAPACITY = 6;
     counter = 0;
     minute_current_counter = 0;
+    state_hour = 0;
 
     state_time = TimeSpan(0, 0, 0, 0);
     ReadSensors();
@@ -92,13 +93,17 @@ uint8_t SensorsHandler::getSOC(float v){
 
 void SensorsHandler::tick(ClockHandler *clk){
     state_time = *clk->GetTimeNow() - change_state_time;
+    state_hour = state_time.days() * 24 + state_time.hours();
   
     if(STATE == STATE_DISCHARGE || STATE == STATE_CHARGE){
         _capacity = state_time.totalseconds() * (current / 3.60);
     }
     else _capacity = 0.00;
 
-    if(STATE != STATE_BEFORE) change_state_time = *clk->GetTimeNow();
+    if(STATE != STATE_BEFORE) {
+        change_state_time = *clk->GetTimeNow();
+        state_hour = 0;
+    }
     STATE_BEFORE = STATE;
 }
 
@@ -269,4 +274,8 @@ float SensorsHandler::GetkVD(){
 
 float SensorsHandler::GetkI(){
     return kI;
+}
+
+uint16_t SensorsHandler::GetStateHour(){
+    return state_hour;
 }
