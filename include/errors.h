@@ -1,9 +1,9 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
+#include <SD.h>
 #include "clock.h"
 #include "sensors.h"
-#include "logger.h"
 
 #define tonePin 17            
 #define RedLED 10             
@@ -13,20 +13,11 @@
 #define ERROR_OVERCURRENT 1   
 #define ERROR_NO_SD 2   
 
-//class Logger;
+extern String error_string;
+extern uint16_t ERROR_CODE;
 
-class ErrorHandler : Logger{
-private:
-    String error_string;
-    void addMessage(String mes);
-    void clear();
-public:
-    uint16_t ERROR_CODE;
-    ErrorHandler();
-    ~ErrorHandler();
-    void SetupErrors();
-    void CheckErrors(ClockHandler *clk, SensorsHandler *sensors);
-    void LogError();
-};
+void SetupErrors();
+void CheckErrors();
+void LogError();
 
 #endif

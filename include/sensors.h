@@ -30,94 +30,58 @@
 #define k_I 30.3
 #define kVSOC_INIT 4.4
 
-class ClockHandler;
+extern float _capacity;
+extern uint8_t STATE_BEFORE;
+extern uint8_t NOM_VOLTAGE;
+extern uint8_t NOM_CAPACITY; 
+extern uint16_t state_hour;
+    
+extern float kVSOC;   //For calculating SOC: kVD / 5 for 12 V  
+extern float kVD;
+extern float kI;
 
-class SensorsHandler{
-private:
-    float _capacity;
-    uint8_t STATE_BEFORE;
-    uint8_t NOM_VOLTAGE;
-    uint8_t NOM_CAPACITY;
-    uint16_t state_hour;
-        
-    float kVSOC;   //For calculating SOC: kVD / 5 for 12 V  
-    float kVD;
-    float kI;
+extern uint16_t VoltageValue; 
+extern uint16_t ChargeCurrentValue; 
+extern uint16_t DischargeCurrentValue; 
+extern uint16_t TemperatureValue; 
 
-    uint16_t VoltageValue; 
-    uint16_t ChargeCurrentValue; 
-    uint16_t DischargeCurrentValue; 
-    uint16_t TemperatureValue; 
+extern float moment_voltage; 
+extern float moment_current; 
+extern float moment_power; 
+extern uint8_t moment_SOC; 
 
-    float moment_voltage; 
-    float moment_current; 
-    float moment_power; 
-    uint8_t moment_SOC; 
+extern float voltage; 
+extern float current; 
+extern float power; 
+extern uint8_t SOC; 
+extern float temperature; 
 
-    float voltage; 
-    float current; 
-    float power; 
-    uint8_t SOC; 
-    float temperature; 
+extern float voltages[1000 / SENSOR_UPDATE_PERIOD]; 
+extern float currents[1000 / SENSOR_UPDATE_PERIOD]; 
+extern float powers[1000 / SENSOR_UPDATE_PERIOD]; 
+extern float temperatures[1000 / SENSOR_UPDATE_PERIOD]; 
+extern uint8_t socs[1000 / SENSOR_UPDATE_PERIOD]; 
 
-    float voltages[1000 / SENSOR_UPDATE_PERIOD]; 
-    float currents[1000 / SENSOR_UPDATE_PERIOD]; 
-    float powers[1000 / SENSOR_UPDATE_PERIOD]; 
-    float temperatures[1000 / SENSOR_UPDATE_PERIOD]; 
-    uint8_t socs[1000 / SENSOR_UPDATE_PERIOD]; 
+extern float minute_currents[60]; 
+extern float average_current; 
 
-    float minute_currents[60]; 
-    float average_current; 
+extern uint8_t counter; 
+extern uint8_t minute_current_counter;
 
-    uint8_t counter; 
-    uint8_t minute_current_counter;
+extern TimeSpan state_time;
+extern DateTime change_state_time;
 
-    TimeSpan state_time;
-    DateTime change_state_time;
+void setupAnalogInputs();
+uint8_t getSOC(float v);
+void tick();
 
-    void setupAnalogInputs();
-    uint8_t getSOC(float v);
-    void tick(ClockHandler *clk);
-public:
-    uint8_t STATE;
-    float vmax, v90, v80, v70, v60, v50, v40, v30, v20, v10, vmin;
+extern uint8_t STATE;
+extern float vmax, v90, v80, v70, v60, v50, v40, v30, v20, v10, vmin;
 
-    SensorsHandler();
-    ~SensorsHandler();
-
-    void ReadSensors();
-    void GetSecondAverage(ClockHandler *clk);
-    void GetMinuteAverageCurrent();
-    void UpdateVoltageMap();
-
-    uint8_t GetSOC();
-    float GetVoltage();
-    float GetCurrent();
-    float GetPower();
-    float GetCapacity();
-
-    uint8_t GetNomCapacity();
-    uint8_t GetNomVoltage();
-    void SetNomVoltage(uint8_t v);
-    void SetNomCapacity(uint8_t c);
-    float GetAverageCurrent();
-    void SetVoltageQuot(float k);
-    void SetChangeStateTime(DateTime *dt);
-
-    void SetkVD(float k);
-    float GetkVD();
-    void SetkI(float k);
-    float GetkI();
-
-    uint8_t GetMomentSOC();
-    float GetMomentVoltage();
-    float GetMomentCurrent();
-    float GetMomentPower();
-
-    uint16_t GetHours();
-    uint8_t GetMinutes();
-    uint8_t GetSeconds();
-    uint16_t GetStateHour();
-};
+void SetupSensors();
+void ReadSensors();
+void GetSecondAverage();
+void GetMinuteAverageCurrent();
+void UpdateVoltageMap();
 
 #endif

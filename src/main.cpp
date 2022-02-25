@@ -2,11 +2,10 @@
 #include <SD.h>
 #include "config.h"
 #include "logging.h"
-#include "screen.h"
 #include "server.h"
 #include "signals.h"
 #include "common.h"
-#include "ftp.h"
+//#include "ftp.h"
 
 #define T_STACK_SIZE 10000
 #define T_LOOP_NAME "loop1"
@@ -14,17 +13,6 @@
 
 TaskHandle_t MainTask;
 TaskHandle_t SignalTask;
-
-Loggable logger;
-ErrorHandler error;
-Screen screen(OLED_SDA, OLED_SCL);
-ClockHandler clk;
-SensorsHandler sensors;
-MotoHandler moto;
-SignalHandler signal;
-
-void loop1(void *param);
-void signalling(void *param);
 
 ///////////////////////////
 //Lines to be deleted after adding multithreading algorithm
@@ -56,17 +44,17 @@ void setup() {
     }
   #endif
 
-  error.SetupErrors();
-  logger.InitSD(&error);
-  screen.SetupScreen();
-  clk.SetupClock(&sensors);
-  moto.SetupMotohours();
-  server_scope::GetCredentials(&clk, &screen, &sensors);
-  server_scope::SetupServer(&screen);
+  SetupErrors();
+  InitSD();
+  SetupScreen();
+  SetupClock();
+  SetupMotohours();
+  GetCredentials();
+  SetupServer();
   delay(2000);
 
   xTaskCreatePinnedToCore(loop1, T_LOOP_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 0);
-  xTaskCreatePinnedToCore(signalling, T_SIGNAL_NAME, T_STACK_SIZE, NULL, 1, &MainTask, 1);
+  xTaskCreatePinnedToCore(signalling, T_SIGNAL_NAME, T_STACK_SIZE, NULL, 1, &SignalTask, 1);
 }
 
 void loop() {
@@ -76,50 +64,97 @@ void loop1(void *param){
    for(;;){
      if(millis() - timer >= 100){
         timer  = millis();
-        clk.SetMillis(millis() - get_average_timer);
-        sensors.ReadSensors();
-        error.CheckErrors(&clk, &sensors);
+        millisec = millis() - get_average_timer;
+        ReadSensors();
+        CheckErrors();
       }
 
       if(millis() - get_average_timer >= 1000){
         get_average_timer = millis();
-        clk.GetDateTime(&server_scope::timeClient, &sensors);
-        sensors.GetSecondAverage(&clk);
-        screen.UpdateScreen(&clk, &sensors, &error);
+        GetDateTime();
+        GetSecondAverage();
+        UpdateScreen();
       }
 
       if(millis() - logtimer >= 5000){
         logtimer = millis();
-        logger.LogData(&clk, &sensors, &error);
-        error.LogError();
+        LogData(); 
+        LogError();
       }
 
       if(millis() - mototimer >= 60000){
         mototimer = millis();
-        moto.Save();
-        sensors.GetMinuteAverageCurrent();
+        SaveMoto();
+        GetMinuteAverageCurrent();
       }
    }
 }
 
 void signalling(void *param){
     for(;;){
-      if(bitRead(error.ERROR_CODE, ERROR_LOW_VOLTAGE)) signal.RunAlertLowVoltage();
+      if(bitRead(ERROR_CODE, ERROR_LOW_VOLTAGE)) RunAlertLowVoltage();
     }
 }
 
-ErrorHandler* getError(){
-  return &error;
-}
+void GetCredentials(){
+    File f = SD.open("/config.json", FILE_READ);
+    if(f){
+        DynamicJsonDocument doc(1024);
+        String s = f.readString();
+        deserializeJson(doc, s);
+        JsonObject obj = doc.as<JsonObject>();
+        String s1 = obj["ssid"];
+        String s2 = obj["password"];
+        net_ssid = s1.c_str();
+        net_password = s2.c_str();
+        f.close();
+        
+        #ifndef RELEASE
+          Serial.print("Connecting to ");
+          Serial.print(net_ssid);
+          Serial.print(" with password ");
+          Serial.println(net_password);
+        #endif
 
-ClockHandler* getClock(){
-    return &clk;
-}
+        WiFi.begin(net_ssid, net_password);
 
-SensorsHandler* getSensors(){
-  return &sensors;
-}
+        lcd.setTextSize(0);
+        lcd.setTextColor(1);
+        uint8_t n = 0;
 
-MotoHandler* getMoto(){
-  return &moto;
+        while (WiFi.status() != WL_CONNECTED) 
+        {
+          delay(1000);
+          lcd.clearDisplay();
+          lcd.setCursor(1, 1);
+          lcd.print("Network: ");
+          lcd.print(net_ssid);
+          lcd.setCursor(1, 10);
+          for(uint8_t i = 0; i < n; i++) lcd.print(".");
+          n++;
+          if(n > 5) n = 0;
+          lcd.display();
+
+          #ifndef RELEASE
+            Serial.print(".");
+          #endif
+        }
+        #ifndef RELEASE
+          Serial.println("");
+          Serial.println("WiFi connected..!");
+          Serial.print("Got IP: ");
+        #endif 
+
+        lcd.clearDisplay();
+        lcd.setCursor(1, 1);
+        lcd.print("Network: ");
+        lcd.print(net_ssid);
+        lcd.setCursor(1, 10);
+        lcd.print("Wifi connected!");
+    
+        timeClient.begin();
+        timeClient.setTimeOffset(10800);
+        timeClient.update();
+        SyncTime();
+    }
 }

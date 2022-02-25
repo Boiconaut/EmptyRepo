@@ -6,32 +6,16 @@
 #include <Arduino.h>
 #include <RTCLib.h>
 #include "sensors.h"
+#include "common.h"
 
-class SensorsHandler;
+extern uint16_t millisec;
+extern DateTime _now; 
+void displayTime();
+extern RTC_DS3231 rtc;
 
-class ClockHandler : RTC_DS3231{
-private:
-    uint16_t millisec;
-    DateTime _now;
-    void _displayTime();
-public:
-    ClockHandler();
-    ~ClockHandler();
-    
-    void SetupClock(SensorsHandler *sensors);
-    void GetDateTime(NTPClient *timeClient, SensorsHandler *sensors);
-    float GetTemperature();
-    void SyncTime(NTPClient *timeClient, SensorsHandler *sensors);
-    DateTime* GetTimeNow();
-    
-    uint8_t GetDay();
-    uint8_t GetMonth();
-    uint16_t GetYear();
-    uint8_t GetHours();
-    uint8_t GetMinutes();
-    uint8_t GetSeconds();
-    uint16_t GetMillis();
-    void SetMillis(uint16_t m);
-};
+void SetupClock();
+void GetDateTime();
+float GetTemperature();
+void SyncTime();
 
 #endif

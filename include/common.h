@@ -5,12 +5,11 @@
 #include "clock.h"
 #include "sensors.h"
 #include "moto.h"
+#include "screen.h"
 
-class MotoHandler;
+void loop1(void *param);
+void signalling(void *param);
 
-ErrorHandler* getError();
-ClockHandler* getClock();
-SensorsHandler* getSensors();
-MotoHandler* getMoto();
+void GetCredentials();
 
 #endif

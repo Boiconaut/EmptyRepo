@@ -11,30 +11,30 @@
 #include "resourses/scripts/AdminScript.h"
 #include "config.h"
 
-IPAddress server_scope::ip = IPAddress(192, 168, 0, 44);
-IPAddress server_scope::gateway = IPAddress(192, 168, 0, 1);
-IPAddress server_scope::subnet = IPAddress(255, 255, 255, 0);
+IPAddress ip = IPAddress(192, 168, 0, 44);
+IPAddress gateway = IPAddress(192, 168, 0, 1);
+IPAddress subnet = IPAddress(255, 255, 255, 0);
 
-AsyncWebServer server_scope::server = AsyncWebServer(80);
-WiFiUDP server_scope::ntpUDP = WiFiUDP();
-NTPClient server_scope::timeClient = NTPClient(ntpUDP);
-DynamicJsonDocument server_scope::json = DynamicJsonDocument(512);
+AsyncWebServer server = AsyncWebServer(80);
+WiFiUDP ntpUDP = WiFiUDP();
+NTPClient timeClient = NTPClient(ntpUDP);
+DynamicJsonDocument json = DynamicJsonDocument(512);
 
-const char* server_scope::user_login;
-const char* server_scope::user_password;
-const char* server_scope::net_ssid;
-const char* server_scope::net_password;
+const char* user_login;
+const char* user_password;
+const char* net_ssid;
+const char* net_password;
 
-String server_scope::valid_token;
-boolean server_scope::IsAuth = false;
-boolean server_scope::IsAdmin = false;
+String valid_token;
+boolean IsAuth = false;
+boolean IsAdmin = false;
 
-String server_scope::getAuthToken(){
+String getAuthToken(){
     unsigned long token = random(998) + 1;
     return String(token);
 }
 
-String server_scope::htmlData(){
+String htmlData(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -47,7 +47,7 @@ String server_scope::htmlData(){
     return ptr;
 }
 
-String server_scope::htmlDataAdmin(){
+String htmlDataAdmin(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -67,7 +67,7 @@ String server_scope::htmlDataAdmin(){
     return ptr;
 }
 
-String server_scope::htmlInvalid(){
+String htmlInvalid(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -82,7 +82,7 @@ String server_scope::htmlInvalid(){
     return ptr;
 }
 
-String server_scope::htmlLogin(){
+String htmlLogin(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -95,7 +95,7 @@ String server_scope::htmlLogin(){
     return ptr;
 }
 
-String server_scope::htmlNotFound(){
+String htmlNotFound(){
     String ptr = "<!DOCTYPE html> <html>\n";
     String h = webheader;
     ptr += h;
@@ -104,7 +104,7 @@ String server_scope::htmlNotFound(){
     return ptr;
 }
 
-void server_scope::handle_onAuth(AsyncWebServerRequest *request, String data){
+void handle_onAuth(AsyncWebServerRequest *request, String data){
     String token;
     String body = data;
   
@@ -133,16 +133,16 @@ void server_scope::handle_onAuth(AsyncWebServerRequest *request, String data){
     request->send(200, "text/json", json_token); 
 }
 
-void server_scope::handle_Prognosis(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void handle_Prognosis(AsyncWebServerRequest *request, String data){
     String body = data;
     int str_length = body.length() + 1;
     char char_array[str_length];
     body.toCharArray(char_array, str_length);
     
     float capacity = atof(char_array);
-    sensors->SetNomCapacity((int)(capacity));
-    float time_past = sensors->GetSeconds() + (sensors->GetMinutes() * 60) + (sensors->GetHours() * 3600);
-    float time_all = (capacity / (0 - sensors->GetAverageCurrent())) * 3600;
+    _capacity = (int)(capacity);
+    float time_past = state_time.seconds() + (state_time.minutes() * 60) + (state_time.hours() * 3600);
+    float time_all = (capacity / (0 - average_current)) * 3600;
     float time_fore = time_all - time_past;
 
     if(time_fore < 0){
@@ -157,7 +157,7 @@ void server_scope::handle_Prognosis(AsyncWebServerRequest *request, String data,
     }
 
     String prognosis = "Приблизительное остаточное время работы: ";
-    if(sensors->GetAverageCurrent() > 0 || time_past < 60){
+    if(average_current > 0 || time_past < 60){
     prognosis += "Для расчёта должно пройти не менее минуты с момента начала разряда";
     }
     else{
@@ -172,151 +172,84 @@ void server_scope::handle_Prognosis(AsyncWebServerRequest *request, String data,
     request->send(200, "text/plain", prognosis);
 }
 
-void server_scope::handle_CalibrateVoltage(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void handle_CalibrateVoltage(AsyncWebServerRequest *request, String data){
     String body = data;
     int str_length = body.length() + 1;
     char char_array[str_length];
     body.toCharArray(char_array, str_length);
     float v = atof(char_array);
 
-    sensors->SetkVD(v / sensors->GetkVD());
+    kVD *= (v / voltage);
     request->send(200, "text/plain", String(v));
 }
 
-void server_scope::handle_CalibrateCurrent(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void handle_CalibrateCurrent(AsyncWebServerRequest *request, String data){
   String body = data;
   int str_length = body.length() + 1;
   char char_array[str_length];
   body.toCharArray(char_array, str_length);
   float cur = atof(char_array);
 
-  sensors->SetkI(cur / sensors->GetkI());
+  kI *= (cur / current);
   request->send(200, "text/plain", String(cur));
 }
 
-void server_scope::handle_SetCapacity(AsyncWebServerRequest *request, String data, SensorsHandler *sensors){
+void handle_SetCapacity(AsyncWebServerRequest *request, String data){
   String body = data;
   int str_length = body.length() + 1;
   char char_array[str_length];
   body.toCharArray(char_array, str_length);
   float capacity = atof(char_array);
   
-  sensors->SetNomCapacity((int) capacity);
-  request->send(200, "text/plain", String(sensors->GetNomCapacity()));
+  NOM_CAPACITY = (int)(capacity);
+  request->send(200, "text/plain", String(NOM_CAPACITY));
 }
 
-void server_scope::assembleData(SensorsHandler *sensors, MotoHandler *moto, ClockHandler *clk, ErrorHandler *error){
+void assembleData(){
     #ifndef RELEASE
     #endif
 
-    json["voltage"] = String(sensors->GetVoltage());
-    json["current"] = String(sensors->GetCurrent());
-    json["power"] = String(sensors->GetPower());
-    json["soc"] = String(sensors->GetSOC());
+    json["voltage"] = String(voltage);
+    json["current"] = String(current);
+    json["power"] = String(power);
+    json["soc"] = String(SOC);
 
-    String date_hour = String(clk->GetHours());
-    String date_minute = clk->GetMinutes() < 10 ? "0" + String(clk->GetMinutes()) : String(clk->GetMinutes());
-    String date_second = clk->GetSeconds() < 10 ? "0" + String(clk->GetSeconds()) : String(clk->GetSeconds());
+    String date_hour = String(_now.hour());
+    String date_minute = _now.minute() < 10 ? "0" + String(_now.minute()) : String(_now.minute());
+    String date_second = _now.second() < 10 ? "0" + String(_now.second()) : String(_now.second());
     String datetime = date_hour + ":" + date_minute + ":" + date_second;
     json["datetime"] = datetime;
 
-    String hour = String(moto->GetHours());
-    String minute = moto->GetMinutes() < 10 ? "0" + String(moto->GetMinutes()) : String(moto->GetMinutes());
-    String second = moto->GetSeconds() < 10 ? "0" + String(moto->GetSeconds()) : String(moto->GetSeconds());
-    String mototime = hour + ":" + minute + ":" + second;
-    json["time"] = mototime;
+    String hour = String(motohour);
+    String minute = moto_time.minutes() < 10 ? "0" + String(moto_time.minutes()) : String(moto_time.minutes());
+    String second = moto_time.seconds() < 10 ? "0" + String(moto_time.seconds()) : String(moto_time.seconds());
+    String moto = hour + ":" + minute + ":" + second;
+    json["time"] = moto;
 
-    String state_time = String(sensors->GetHours()) + ":" + String(sensors->GetMinutes()) 
-                          + ":" + String(sensors->GetSeconds());
-    json["state_time"] = state_time;
+    String state_t = String(state_hour) + ":" + String(state_time.minutes()) 
+                          + ":" + String(state_time.seconds());
+    json["state_time"] = state_t;
 
     String current_state;
-    if(sensors->STATE == STATE_CHARGE) current_state = "В заряде:";
-    else if (sensors->STATE == STATE_DISCHARGE) current_state = "В разряде:";
+    if(STATE == STATE_CHARGE) current_state = "В заряде:";
+    else if (STATE == STATE_DISCHARGE) current_state = "В разряде:";
     else current_state = "Релаксация";
     json["state"] = current_state;
 
-    json["temperature"] = clk->GetTemperature();
-    json["capacity"] = String(sensors->GetCapacity()).substring(0, String(sensors->GetCapacity()).length() - 3);
+    json["temperature"] = temperature;
+    json["capacity"] = String(_capacity).substring(0, String(_capacity).length() - 3);
 
-    String error_state = error->ERROR_CODE ? "Ошибка" : "Ошибок нет";
+    String error_state = ERROR_CODE ? "Ошибка" : "Ошибок нет";
     json["error_state"] = error_state;
 
     String error_code = "";
-    if(bitRead(error->ERROR_CODE, ERROR_LOW_VOLTAGE)) { error_code += "<h3>Низкое напряжение</h3>"; }
-    if(bitRead(error->ERROR_CODE, ERROR_OVERCURRENT)) { error_code += "<h3>Перегрузка по току</h3>"; }
-    if(bitRead(error->ERROR_CODE, ERROR_NO_SD)) { error_code += "<h3>Отсутствует SD-карта</h3>"; }
+    if(bitRead(ERROR_CODE, ERROR_LOW_VOLTAGE)) { error_code += "<h3>Низкое напряжение</h3>"; }
+    if(bitRead(ERROR_CODE, ERROR_OVERCURRENT)) { error_code += "<h3>Перегрузка по току</h3>"; }
+    if(bitRead(ERROR_CODE, ERROR_NO_SD)) { error_code += "<h3>Отсутствует SD-карта</h3>"; }
     json["error"] = error_code;
 }
 
-void server_scope::GetCredentials(ClockHandler *clk, Screen *screen, SensorsHandler *sensors){
-    File f = SD.open("/config.json", FILE_READ);
-    if(f){
-        DynamicJsonDocument doc(1024);
-        String s = f.readString();
-        deserializeJson(doc, s);
-        JsonObject obj = doc.as<JsonObject>();
-        String s1 = obj["ssid"];
-        String s2 = obj["password"];
-        net_ssid = s1.c_str();
-        net_password = s2.c_str();
-        f.close();
-        
-        #ifndef RELEASE
-          Serial.print("Connecting to ");
-          Serial.print(net_ssid);
-          Serial.print(" with password ");
-          Serial.println(net_password);
-        #endif
-
-        WiFi.begin(net_ssid, net_password);
-
-        screen->setTextSize(0);
-        screen->setTextColor(1);
-        uint8_t n = 0;
-
-        while (WiFi.status() != WL_CONNECTED) 
-        {
-          delay(1000);
-          screen->clearDisplay();
-          screen->setCursor(1, 1);
-          screen->print("Network: ");
-          screen->print(net_ssid);
-          screen->setCursor(1, 10);
-          for(uint8_t i = 0; i < n; i++) screen->print(".");
-          n++;
-          if(n > 5) n = 0;
-          screen->display();
-
-          #ifndef RELEASE
-            Serial.print(".");
-          #endif
-        }
-        #ifndef RELEASE
-          Serial.println("");
-          Serial.println("WiFi connected..!");
-          Serial.print("Got IP: ");
-        #endif 
-
-        screen->clearDisplay();
-        screen->setCursor(1, 1);
-        screen->print("Network: ");
-        screen->print(net_ssid);
-        screen->setCursor(1, 10);
-        screen->print("Wifi connected!");
-    
-        timeClient.begin();
-        timeClient.setTimeOffset(10800);
-        timeClient.update();
-        clk->SyncTime(&timeClient, sensors);
-    }
-}
-
-NTPClient* server_scope::NTP(){
-  return &timeClient;
-}
-
-void server_scope::SetupServer(Screen *screen){
+void SetupServer(){
     WiFi.config(ip, gateway, subnet);
     #ifndef RELEASE
       Serial.println(WiFi.localIP());
@@ -332,16 +265,16 @@ void server_scope::SetupServer(Screen *screen){
           handle_onAuth(request, string_data);
         }
         if(request->url() == "/getprognosis"){
-          handle_Prognosis(request, dat, getSensors());
+          handle_Prognosis(request, dat);
         }
         if(request->url() == "/calibratevoltage"){
-          handle_CalibrateVoltage(request, dat, getSensors());
+          handle_CalibrateVoltage(request, dat);
         }
         if(request->url() == "/calibratecurrent"){
-          handle_CalibrateCurrent(request, dat, getSensors());
+          handle_CalibrateCurrent(request, dat);
         }
         if(request->url() == "/setcapacity"){
-          handle_SetCapacity(request, dat, getSensors());
+          handle_SetCapacity(request, dat);
         }
       });
     
@@ -371,7 +304,7 @@ void server_scope::SetupServer(Screen *screen){
     });
 
     server.on("/getdata", HTTP_GET, [&](AsyncWebServerRequest *request){
-        assembleData(getSensors(), getMoto(), getClock(), getError());
+        assembleData();
         String json_string; 
         serializeJson(json, json_string);
         request->send(200, "text/json", json_string);
@@ -413,16 +346,16 @@ void server_scope::SetupServer(Screen *screen){
       });
       server.begin();
       
-      screen->setCursor(1, 19);
-      screen->print("IP: ");
-      screen->print(WiFi.localIP());
-      screen->setCursor(1, 28);
-      screen->println("HTTP server started");
-      screen->setCursor(1, 37);
-      screen->print("Mac address: ");
-      screen->setCursor(1, 46);
-      screen->print(WiFi.macAddress());
-      screen->display();
+      lcd.setCursor(1, 19);
+      lcd.print("IP: ");
+      lcd.print(WiFi.localIP());
+      lcd.setCursor(1, 28);
+      lcd.println("HTTP server started");
+      lcd.setCursor(1, 37);
+      lcd.print("Mac address: ");
+      lcd.setCursor(1, 46);
+      lcd.print(WiFi.macAddress());
+      lcd.display();
 
       #ifndef RELEASE
         Serial.println("HTTP server started");

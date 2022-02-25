@@ -1,6 +1,6 @@
 #include "signals.h"
 
-void SignalHandler::tone(uint8_t pin, uint16_t frequency, uint32_t duration){
+void tone(uint8_t pin, uint16_t frequency, uint32_t duration){
     uint32_t t = millis();
     uint32_t i = 0;
     float interval = 1000000 / float(frequency);
@@ -16,7 +16,7 @@ void SignalHandler::tone(uint8_t pin, uint16_t frequency, uint32_t duration){
     }
 }
 
-void SignalHandler::RunAlertLowVoltage(){
+void RunAlertLowVoltage(){
     tone(tonePin, FREQUENCY, DURATION);
     delay(INTERVAL);
 }

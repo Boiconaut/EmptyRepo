@@ -1,49 +1,50 @@
 #include "logging.h"
-#include "errors.h"
-#include "config.h"
 
-Loggable::Loggable(){
-    dataString = "";
-}
+String dataString = "";
 
-Loggable::~Loggable(){
-  
-}
-
-void Loggable::InitSD(ErrorHandler *error){
+void InitSD(){
    if(!SD.begin(CHIP_SELECT)){
      #ifndef RELEASE
        Serial.print("No SD card");
      #endif
-     error->ERROR_CODE |= (1 << ERROR_NO_SD);
+     ERROR_CODE |= (1 << ERROR_NO_SD);
   }
 }
 
-void Loggable::LogData(ClockHandler *clk, SensorsHandler *sensors, ErrorHandler *error){
+void LogData(){
     String dataString = "";
     
-    dataString += String(clk->GetDay());
+    dataString += String(_now.day());
     dataString += "-";
-    dataString += String(clk->GetMonth());
+    dataString += String(_now.month());
     dataString += "-";
-    dataString += String(clk->GetYear());
+    dataString += String(_now.year());
     dataString += " ";
-    dataString += String(clk->GetHours());
+    dataString += String(_now.hour());
     dataString += ":";
-    dataString += String(clk->GetMinutes());
+    dataString += String(_now.minute());
     dataString += ":";
-    dataString += String(clk->GetSeconds());
+    dataString += String(_now.second());
     dataString += "  ";
     
     dataString += "U = ";
-    dataString += String(sensors->GetVoltage());
+    dataString += String(voltage);
     dataString += ", I = ";
-    dataString += String(sensors->GetCurrent());
+    dataString += String(current);
     dataString += ", P = ";
-    dataString += String(sensors->GetPower());
+    dataString += String(power);
     dataString += ",  SOC = ";
-    dataString += String(sensors->GetSOC());
+    dataString += String(SOC);
     dataString += "%";
    
-   Log(dataString, 0, error);
+    File file = SD.open("/datalog.txt", FILE_APPEND);
+   
+    if (file) {
+      file.println(dataString);
+      ERROR_CODE &= ~(1 << ERROR_NO_SD);
+    }
+    else{
+      ERROR_CODE |= (1 << ERROR_NO_SD);
+    }
+    file.close();
 }

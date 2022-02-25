@@ -1,29 +1,54 @@
 #include "sensors.h"
 
-SensorsHandler::SensorsHandler(){
-    kVSOC = kVSOC_INIT;
-    kVD = k_VD;
-    kI = k_I;
+float kVSOC = kVSOC_INIT;
+float kVD = k_VD;
+float kI = k_I;
+float _capacity = 0.00;
+uint8_t STATE = 0;
+uint8_t STATE_BEFORE = 0;
+uint8_t NOM_VOLTAGE = 12;
+uint8_t NOM_CAPACITY = 6;
+uint8_t counter = 0;
+uint8_t minute_current_counter = 0;
+uint16_t state_hour = 0;
+
+TimeSpan state_time = TimeSpan(0, 0, 0, 0);
+DateTime change_state_time;
+
+uint16_t VoltageValue; 
+uint16_t ChargeCurrentValue; 
+uint16_t DischargeCurrentValue; 
+uint16_t TemperatureValue; 
+
+float moment_voltage; 
+float moment_current; 
+float moment_power; 
+uint8_t moment_SOC; 
+
+float voltage; 
+float current; 
+float power; 
+uint8_t SOC; 
+float temperature; 
+
+float voltages[1000 / SENSOR_UPDATE_PERIOD]; 
+float currents[1000 / SENSOR_UPDATE_PERIOD]; 
+float powers[1000 / SENSOR_UPDATE_PERIOD]; 
+float temperatures[1000 / SENSOR_UPDATE_PERIOD]; 
+uint8_t socs[1000 / SENSOR_UPDATE_PERIOD]; 
+
+float minute_currents[60]; 
+float average_current; 
+
+float vmax, v90, v80, v70, v60, v50, v40, v30, v20, v10, vmin;
+uint16_t millisec = 0;
+
+void SetupSensors(){
     UpdateVoltageMap();
-
-    _capacity = 0.00;
-    STATE = 0;
-    STATE_BEFORE = 0;
-    NOM_VOLTAGE = 12;
-    NOM_CAPACITY = 6;
-    counter = 0;
-    minute_current_counter = 0;
-    state_hour = 0;
-
-    state_time = TimeSpan(0, 0, 0, 0);
     ReadSensors();
 }
 
-SensorsHandler::~SensorsHandler(){
-    
-}
-
-void SensorsHandler::setupAnalogInputs(){
+void setupAnalogInputs(){
     VoltageValue = analogRead(VoltPin);
     ChargeCurrentValue = analogRead(ChargeCurrPin);                                  
     DischargeCurrentValue = analogRead(DischargeCurrPin); 
@@ -39,7 +64,7 @@ void SensorsHandler::setupAnalogInputs(){
                         : (DischargeCurrentValue * (3.3 / 4095.0) * kI);     
 }
 
-uint8_t SensorsHandler::getSOC(float v){
+uint8_t getSOC(float v){
     if(STATE == STATE_REST){
         if(v >= v90 && v <= vmax){
             return 90 + (v - v90)/(vmax - v90) * 10;
@@ -80,7 +105,6 @@ uint8_t SensorsHandler::getSOC(float v){
     }
 
     uint8_t prev_soc = 0;
-    //if(STATE_BEFORE == STATE_REST) prev_soc = soc;
 
     if(STATE == STATE_CHARGE){
         return (_capacity / (1000 * NOM_CAPACITY)) * 100;
@@ -91,23 +115,23 @@ uint8_t SensorsHandler::getSOC(float v){
     }
 }
 
-void SensorsHandler::tick(ClockHandler *clk){
-    state_time = *clk->GetTimeNow() - change_state_time;
+void tick(){
+    state_time = rtc.now() - change_state_time;
     state_hour = state_time.days() * 24 + state_time.hours();
   
     if(STATE == STATE_DISCHARGE || STATE == STATE_CHARGE){
-        _capacity = state_time.totalseconds() * (current / 3.60);
+       _capacity = state_time.totalseconds() * (current / 3.60);
     }
     else _capacity = 0.00;
 
     if(STATE != STATE_BEFORE) {
-        change_state_time = *clk->GetTimeNow();
+        change_state_time = rtc.now();
         state_hour = 0;
     }
     STATE_BEFORE = STATE;
 }
 
-void SensorsHandler::ReadSensors(){
+void ReadSensors(){
     setupAnalogInputs();
     
     if(STATE == STATE_DISCHARGE){
@@ -124,7 +148,7 @@ void SensorsHandler::ReadSensors(){
     counter++;
 }
 
-void SensorsHandler::GetSecondAverage(ClockHandler *clk){
+void GetSecondAverage(){
     float sum_voltage = 0;
     float sum_current = 0;
     float sum_power = 0;
@@ -152,13 +176,13 @@ void SensorsHandler::GetSecondAverage(ClockHandler *clk){
     else NOM_VOLTAGE = 48;
 
     UpdateVoltageMap();
-    tick(clk);
+    tick();
     
     minute_currents[minute_current_counter] = current;
     minute_current_counter++;
 }
 
-void SensorsHandler::GetMinuteAverageCurrent(){
+void GetMinuteAverageCurrent(){
     float sum = 0;
     for(int i = 0; i < minute_current_counter; i++){
         sum += minute_currents[i];
@@ -170,7 +194,7 @@ void SensorsHandler::GetMinuteAverageCurrent(){
     minute_current_counter = 0;
 }
 
-void SensorsHandler::UpdateVoltageMap(){
+void UpdateVoltageMap(){
     vmax = VMAX * kVSOC;      
     v90 = V90 * kVSOC;     
     v80 = V80 * kVSOC;
@@ -182,100 +206,4 @@ void SensorsHandler::UpdateVoltageMap(){
     v20 = V20 * kVSOC;
     v10 = V10 * kVSOC;
     vmin = VMIN * kVSOC;
-}
-
-uint8_t SensorsHandler::GetSOC(){
-    return SOC;
-}
-
-float SensorsHandler::GetVoltage(){
-    return voltage;
-}
-
-float SensorsHandler::GetCurrent(){
-    return current;
-}
-
-float SensorsHandler::GetPower(){
-    return power;
-}
-
-float SensorsHandler::GetCapacity(){
-    return _capacity;
-}
-
-uint8_t SensorsHandler::GetMomentSOC(){
-    return moment_SOC;
-}
-
-float SensorsHandler::GetMomentVoltage(){
-    return moment_voltage;
-}
-
-float SensorsHandler::GetMomentCurrent(){
-    return moment_current;
-}
-
-float SensorsHandler::GetMomentPower(){
-    return moment_power;
-}
-
-uint16_t SensorsHandler::GetHours(){
-    return state_time.hours();
-}
-
-uint8_t SensorsHandler::GetMinutes(){
-    return state_time.minutes();
-}
-
-uint8_t SensorsHandler::GetSeconds(){
-    return state_time.seconds();
-}
-
-uint8_t SensorsHandler::GetNomVoltage(){
-    return NOM_VOLTAGE;
-}
-
-uint8_t SensorsHandler::GetNomCapacity(){
-    return NOM_CAPACITY;
-}
-
-void SensorsHandler::SetNomCapacity(uint8_t c){
-    NOM_CAPACITY = c;
-}
-
-void SensorsHandler::SetNomVoltage(uint8_t v){
-    NOM_VOLTAGE = v;
-}
-
-float SensorsHandler::GetAverageCurrent(){
-    return average_current;
-}
-
-void SensorsHandler::SetVoltageQuot(float k){
-    kVSOC = k;
-}
-
-void SensorsHandler::SetChangeStateTime(DateTime *dt){
-    change_state_time = *dt;
-}
-
-void SensorsHandler::SetkVD(float k){
-    kVD = k;
-}
-
-void SensorsHandler::SetkI(float k){
-    kI = k;
-}
-
-float SensorsHandler::GetkVD(){
-    return kVD;
-}
-
-float SensorsHandler::GetkI(){
-    return kI;
-}
-
-uint16_t SensorsHandler::GetStateHour(){
-    return state_hour;
 }

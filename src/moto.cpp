@@ -1,18 +1,16 @@
 #include <EEPROM.h>
 #include "moto.h"
 
-MotoHandler::~MotoHandler(){
+TimeSpan moto_time;
+DateTime moto_relative;
+uint16_t motohour;
 
-}
+float loadCurrent = LOAD_CURRENT;
+uint8_t min_cell = MIN_CELL; 
+uint8_t hour_low_cell = HOUR_LOW_CELL; 
+uint8_t hour_high_cell = HOUR_HIGH_CELL; 
 
-MotoHandler::MotoHandler(){
-    loadCurrent = LOAD_CURRENT;
-    min_cell = MIN_CELL; 
-    hour_low_cell = HOUR_LOW_CELL; 
-    hour_high_cell = HOUR_HIGH_CELL; 
-}
-
-void MotoHandler::read(){
+void read(){
     uint8_t motomin = EEPROM.read(min_cell);
     uint8_t low = EEPROM.read(hour_low_cell);
     uint8_t high = EEPROM.read(hour_high_cell);
@@ -20,27 +18,27 @@ void MotoHandler::read(){
     uint8_t _day = motohour / 24;
     uint8_t _hour = motohour % 24;
     moto_time = TimeSpan(_day, _hour, motomin, 0);
-    moto_relative = *getClock()->GetTimeNow();
+    moto_relative = _now;
 }
 
-void MotoHandler::SetupMotohours(){
+void SetupMotohours(){
     EEPROM.begin(512);
     read();
 }
 
-void MotoHandler::Reset(){
+void Reset(){
     EEPROM.write(min_cell, 0);
     EEPROM.write(hour_low_cell, 0);
     EEPROM.write(hour_high_cell, 0);
     EEPROM.commit();
 }
 
-void MotoHandler::Tick(){
-    moto_time = *getClock()->GetTimeNow() - moto_relative;
-    moto_relative = *getClock()->GetTimeNow();
+void Tick(){
+    moto_time = _now - moto_relative;
+    moto_relative = _now;
 }
 
-void MotoHandler::Save(){
+void SaveMoto(){
     motohour = 24 * moto_time.days() + moto_time.hours();
     uint8_t high = highByte(motohour);
     uint8_t low = lowByte(motohour);
@@ -50,14 +48,14 @@ void MotoHandler::Save(){
     EEPROM.commit();
 }
 
-uint16_t MotoHandler::GetHours(){
+uint16_t MotoHanGetHours(){
     return motohour;
 }
 
-uint8_t MotoHandler::GetMinutes(){
+uint8_t GetMinutes(){
     return moto_time.minutes();
 }
 
-uint8_t MotoHandler::GetSeconds(){
+uint8_t GetSeconds(){
     return moto_time.seconds();
 }

@@ -1,65 +1,62 @@
 #include "errors.h"
 
-ErrorHandler::ErrorHandler(){
-    error_string = "";
+String error_string = "";
+uint16_t ERROR_CODE = B00000000;
+
+void SetupErrors(){
+  pinMode(tonePin, OUTPUT);
+  pinMode(RedLED, OUTPUT);
+  pinMode(BlueLED, OUTPUT);
 }
 
-ErrorHandler::~ErrorHandler(){
-    
-}
+void CheckErrors(){
+  error_string += String(_now.day());
+  error_string += "-";
+  error_string += String(_now.month());
+  error_string += "-";
+  error_string += String(_now.year());
+  error_string += " ";
+  error_string += String(_now.hour());
+  error_string += ":";
+  error_string += String(_now.minute());
+  error_string += ":";
+  error_string += String(_now.second());
+  error_string += ".";
+  error_string += String(millisec);
+  error_string += "  ";
 
-void ErrorHandler::addMessage(String mes){
-    error_string += mes;
-}
+  if(moment_voltage < v20) ERROR_CODE |= (1 << ERROR_LOW_VOLTAGE);
+  if(moment_voltage >= v20) ERROR_CODE &= ~(1 << ERROR_LOW_VOLTAGE);
+  if(moment_current > 200) ERROR_CODE |= (1 << ERROR_OVERCURRENT);
+  if(moment_current <= 200) ERROR_CODE &= ~(1 << ERROR_OVERCURRENT);
 
-void ErrorHandler::clear(){
-    error_string = "";
-}
-
-void ErrorHandler::SetupErrors(){
-    pinMode(tonePin, OUTPUT);
-    pinMode(RedLED, OUTPUT);
-    pinMode(BlueLED, OUTPUT);
-    ERROR_CODE = B00000000;
-}
-
-void ErrorHandler::CheckErrors(ClockHandler *clk, SensorsHandler *sensors){
-    error_string += String(clk->GetDay());
-    error_string += "-";
-    error_string += String(clk->GetMonth());
-    error_string += "-";
-    error_string += String(clk->GetYear());
-    error_string += " ";
-    error_string += String(clk->GetHours());
-    error_string += ":";
-    error_string += String(clk->GetMinutes());
-    error_string += ":";
-    error_string += String(clk->GetSeconds());
-    error_string += ".";
-    error_string += String(clk->GetMillis());
-    error_string += "  ";
-
-    if(sensors->GetMomentVoltage() < sensors->v20) ERROR_CODE |= (1 << ERROR_LOW_VOLTAGE);
-    if(sensors->GetMomentVoltage() >= sensors->v20) ERROR_CODE &= ~(1 << ERROR_LOW_VOLTAGE);
-    if(sensors->GetMomentCurrent() > 200) ERROR_CODE |= (1 << ERROR_OVERCURRENT);
-    if(sensors->GetMomentCurrent() <= 200) ERROR_CODE &= ~(1 << ERROR_OVERCURRENT);
-
-    if(bitRead(ERROR_CODE, ERROR_LOW_VOLTAGE)){
-        error_string += "Error: low voltage! U = ";
-        error_string += String(sensors->GetMomentVoltage());
-        error_string += " V";
-        error_string += " ";
+  if(bitRead(ERROR_CODE, ERROR_LOW_VOLTAGE)){
+      error_string += "Error: low voltage! U = ";
+      error_string += String(moment_voltage);
+      error_string += " V";
+      error_string += " ";
     }
     if(bitRead(ERROR_CODE, ERROR_OVERCURRENT)){
-        error_string += "Error: overcurrent! I = ";
-        error_string += String(sensors->GetMomentCurrent());
-        error_string += " A";
-        error_string += " ";
+      error_string += "Error: overcurrent! I = ";
+      error_string += String(moment_current);
+      error_string += " A";
+      error_string += " ";
     }
     error_string += "\n";
 }
 
-void ErrorHandler::LogError(){
-    if(error_string.length() > 2) Log(error_string, 1, this);
-    clear();
+void LogError(){
+  File errors_file = SD.open("/errors.txt", FILE_APPEND);
+
+  if(error_string.length() > 2){
+    if(errors_file){
+        errors_file.println(error_string);
+        ERROR_CODE &= ~(1 << ERROR_NO_SD);
+      }
+      else{
+        ERROR_CODE |= (1 << ERROR_NO_SD);
+      }
+      errors_file.close();
+      error_string = "\n";
+  }
 }

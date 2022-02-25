@@ -10,11 +10,7 @@
 #define DURATION 500
 #define INTERVAL 500
 
-class SignalHandler {
-private:
-    void tone(uint8_t pin, uint16_t frequency, uint32_t duration);
-public:
-    void RunAlertLowVoltage();
-};
+void tone(uint8_t pin, uint16_t frequency, uint32_t duration);
+void RunAlertLowVoltage();
 
 #endif

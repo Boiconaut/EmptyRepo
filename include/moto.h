@@ -9,29 +9,20 @@
 #define HOUR_LOW_CELL 1
 #define HOUR_HIGH_CELL 2
 
-class MotoHandler{
-private:
-    TimeSpan moto_time;
-    DateTime moto_relative;
-    uint16_t motohour;
+extern TimeSpan moto_time; 
+extern DateTime moto_relative;
+extern uint16_t motohour;
 
-    uint8_t min_cell; 
-    uint8_t hour_low_cell; 
-    uint8_t hour_high_cell; 
+extern uint8_t min_cell; 
+extern uint8_t hour_low_cell; 
+extern uint8_t hour_high_cell; 
 
-    float loadCurrent;
-    void read();
-public:
-    MotoHandler();
-    ~MotoHandler();
-    void SetupMotohours();
-    void Reset();
-    void Tick();
-    void Save();
+extern float loadCurrent;
+void read();
 
-    uint16_t GetHours();
-    uint8_t GetMinutes();
-    uint8_t GetSeconds();
-};
+void SetupMotohours();
+void Reset();
+void Tick();
+void SaveMoto();
 
 #endif
