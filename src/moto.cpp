@@ -34,7 +34,7 @@ void Reset(){
 }
 
 void Tick(){
-    moto_time = _now - moto_relative;
+    moto_time = moto_time + (_now - moto_relative);
     moto_relative = _now;
 }
 

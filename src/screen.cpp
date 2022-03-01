@@ -55,7 +55,7 @@ void Screen_2(){
     if(STATE == 1) lcd.print("On charge: ");
     else if(STATE == 2) lcd.print("On discharge: ");
     else lcd.print("Relaxing: ");
-    String h = state_time.hours() < 0 ? "0" + String(state_time.hours()) : String(state_time.hours());
+    String h = state_hour < 0 ? "0" + String(state_time.hours()) : String(state_time.hours());
     String m = state_time.minutes() < 0 ? "0" + String(state_time.minutes()) : String(state_time.minutes());
     String s = state_time.seconds() < 0 ? "0" + String(state_time.seconds()) : String(state_time.seconds());
     String state_time = h + ":" + m + ":" + s;

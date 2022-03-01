@@ -2,6 +2,7 @@
 #define LOGGING_H
 
 #include <SD.h>
+#include <ArduinoJson.h>
 #include "clock.h"
 #include "errors.h"
 #include "common.h"
@@ -14,5 +15,6 @@ extern String dataString;
 
 void InitSD();
 void LogData();
+void SaveStateTime();
 
 #endif

@@ -1,13 +1,13 @@
 #include "errors.h"
 
-String error_string = "";
+String error_string = "\n";
 uint16_t ERROR_CODE = B00000000;
 
 void SetupErrors(){
   pinMode(tonePin, OUTPUT);
   pinMode(RedLED, OUTPUT);
   pinMode(BlueLED, OUTPUT);
-}
+} 
 
 void CheckErrors(){
   error_string += String(_now.day());
@@ -46,10 +46,10 @@ void CheckErrors(){
 }
 
 void LogError(){
-  File errors_file = SD.open("/errors.txt", FILE_APPEND);
+   if(error_string.length() > 2){
+      File errors_file = SD.open("/errors.txt", FILE_APPEND);
 
-  if(error_string.length() > 2){
-    if(errors_file){
+      if(errors_file){
         errors_file.println(error_string);
         ERROR_CODE &= ~(1 << ERROR_NO_SD);
       }
@@ -58,5 +58,5 @@ void LogError(){
       }
       errors_file.close();
       error_string = "\n";
-  }
+   }
 }

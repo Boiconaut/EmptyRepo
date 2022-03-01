@@ -179,7 +179,8 @@ void handle_CalibrateVoltage(AsyncWebServerRequest *request, String data){
     body.toCharArray(char_array, str_length);
     float v = atof(char_array);
 
-    kVD *= (v / voltage);
+    if(voltage != 0) kVD *= (v / voltage);
+    if(kVD == 0.00) kVD = 0.1;
     request->send(200, "text/plain", String(v));
 }
 
@@ -190,7 +191,8 @@ void handle_CalibrateCurrent(AsyncWebServerRequest *request, String data){
   body.toCharArray(char_array, str_length);
   float cur = atof(char_array);
 
-  kI *= (cur / current);
+  if(current != 0) kI *= (cur / current);
+  if(kI == 0.00) kI = 0.1;
   request->send(200, "text/plain", String(cur));
 }
 
@@ -201,7 +203,7 @@ void handle_SetCapacity(AsyncWebServerRequest *request, String data){
   body.toCharArray(char_array, str_length);
   float capacity = atof(char_array);
   
-  NOM_CAPACITY = (int)(capacity);
+  NOM_CAPACITY = (uint8_t)(capacity);
   request->send(200, "text/plain", String(NOM_CAPACITY));
 }
 
